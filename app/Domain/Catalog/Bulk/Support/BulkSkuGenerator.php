@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Domain\Catalog\Bulk\Support;
+
+use Illuminate\Support\Str;
+
+class BulkSkuGenerator
+{
+    public function productCode(string $excelKey): string
+    {
+        return 'PRD-' . strtoupper(Str::random(6)) . '-' . strtoupper($excelKey);
+    }
+
+    public function productSku(string $productName): string
+    {
+        return 'PSKU-' . strtoupper(Str::random(8));
+    }
+
+    public function variantSku(string $productName, array $variantLabels): string
+    {
+        $prefix = collect(explode(' ', $productName))
+            ->map(fn($w) => strtoupper(substr($w, 0, 1)))
+            ->implode('');
+
+        $variantCode = collect($variantLabels)
+            ->map(fn($v) => strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $v), 0, 3)))
+            ->implode('-');
+
+        return "{$prefix}-{$variantCode}";
+    }
+
+    public function slug(string $name): string
+    {
+        return Str::slug($name) . '-' . uniqid();
+    }
+}

@@ -1,0 +1,137 @@
+.btn-gradient-primary {
+    background: linear-gradient(45deg, #007bff, #00c6ff);
+    color: white;
+    border: none;
+}
+
+.btn-gradient-success {
+    background: linear-gradient(45deg, #00b09b, #96c93d);
+    color: white;
+    border: none;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #007bff, #00c6ff);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(45deg, #00b09b, #96c93d);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(45deg, #ff416c, #ff4b2b);
+}
+
+.bg-gradient-secondary {
+    background: linear-gradient(45deg, #6c757d, #adb5bd);
+}
+
+.hover-row:hover {
+    background: #f8f9fa;
+    transition: 0.3s;
+}
+
+.hover-glow:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-glow-primary,
+.btn-glow-secondary,
+.btn-glow-danger {
+    border: none;
+    transition: 0.3s;
+}
+
+.btn-glow-primary {
+    background: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+}
+
+.btn-glow-secondary {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.btn-glow-danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.btn-glow-primary:hover,
+.btn-glow-secondary:hover,
+.btn-glow-danger:hover {
+    transform: scale(1.05);
+}
+
+.role-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #007bff, #00c6ff);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+/* Compact table and card adjustments */
+.table {
+    font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+    padding: 0.6rem 0.75rem;
+}
+
+/* Role card animation */
+.role-card {
+    background: rgba(255, 255, 255, 0.95);
+    transition: all 0.3s ease;
+}
+
+.role-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* Fix equal heights */
+/* @media (min-width: 995px) {
+    .row.g-4>[class*="col-lg-"] {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card.h-100 {
+        flex: 1;
+    }
+} */
+
+/* Slim vertical scroll for roles */
+.card-body.overflow-auto::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.dropdown-menu button.dropdown-item.active {
+    background: var(--bs-primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+.dropdown-menu button.dropdown-item {
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.dropdown-menu button.dropdown-item:hover {
+    background-color: #f1f1f1;
+}

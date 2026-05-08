@@ -1,0 +1,329 @@
+@extends('admin.layouts.admin')
+
+@section('title', 'Product Details')
+
+@push('styles')
+    <style>
+        /* ---------- LAYOUT ---------- */
+
+        .pdp-left {
+            max-width: 520px;
+        }
+
+        .pdp-section {
+            margin-bottom: 10px;
+        }
+
+        .pdp-card {
+            border-radius: 12px;
+            border: 1px solid #eceef2;
+            padding: 12px;
+            background: #fff;
+        }
+
+        /* ---------- TYPO ---------- */
+
+        .pdp-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .pdp-meta {
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* ---------- PREVIEW ---------- */
+
+        .preview-wrap {
+            background: #f5f6f9;
+            border-radius: 12px;
+            padding: 12px;
+            position: sticky;
+            top: 18px;
+        }
+
+        .preview-box {
+            height: 520px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* ---------- MEDIA STRIP ---------- */
+
+        .media-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .media-strip img {
+            width: 54px;
+            height: 54px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .media-strip img:hover {
+            border-color: #111;
+        }
+
+        /* ---------- ATTRIBUTES ---------- */
+
+        .attr-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .4px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        .attr-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .visual-pill {
+            padding: 4px 12px;
+            font-size: 11px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .spec-pill {
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 20px;
+            background: #f1f2f6;
+        }
+
+        .spec-disabled {
+            opacity: .35;
+        }
+
+        /* ---------- PRICE BLOCK ---------- */
+
+        .price-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+        }
+
+        .price {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .stock {
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
+@endpush
+
+@section('content')
+
+    @php
+        $hasVariants = $product->active_variants_count > 0;
+        $hasGallery = $baseImages->count() > 0;
+    @endphp
+
+    <div class="container-fluid">
+        <div class="row g-3">
+
+            {{-- LEFT --}}
+            <div class="col-lg-5 pdp-left">
+
+                <div class="pdp-card pdp-section">
+
+                    <div class="pdp-title">{{ $product->name }}</div>
+                    <div class="pdp-meta">Seller: {{ $product->seller->name ?? '—' }}</div>
+
+                    @if ($hasVariants)
+                        <div class="price-block">
+                            <div class="price">
+                                ₹ <span id="variantPrice">{{ $product->min_variant_price }}</span>
+                            </div>
+                            <div class="stock">
+                                Stock: <span id="variantStock">{{ $product->total_variant_stock }}</span>
+                            </div>
+                        </div>
+                    @else
+                        <div class="price-block">
+                            <div class="price">₹ {{ $product->price }}</div>
+                            <div class="stock">Stock: {{ $product->stock }}</div>
+                        </div>
+                    @endif
+
+                </div>
+
+                @if ($hasVariants)
+                    <div class="pdp-card pdp-section">
+
+                        @foreach ($attributeGroups as $attrId => $group)
+                            <div class="mb-2">
+                                <div class="attr-title">{{ $group['name'] }}</div>
+
+                                <div class="attr-row">
+
+                                    @foreach ($group['values'] as $id => $label)
+                                        @if ($group['is_visual'])
+                                            <button class="btn btn-dark visual-pill" data-attr="{{ $attrId }}"
+                                                data-id="{{ $id }}">
+                                                {{ $label }}
+                                            </button>
+                                        @else
+                                            <span class="spec-pill" data-attr="{{ $attrId }}"
+                                                data-id="{{ $id }}">
+                                                {{ $label }}
+                                            </span>
+                                        @endif
+                                    @endforeach
+
+                                </div>
+                            </div>
+                        @endforeach
+
+                    </div>
+                @endif
+
+                <div class="pdp-card pdp-section">
+
+                    <div class="attr-title">Variant Media</div>
+                    <div id="variantStrip" class="media-strip"></div>
+
+                    @if ($hasGallery)
+                        <div class="attr-title mt-2">Product Gallery</div>
+                        <div class="media-strip">
+                            @foreach ($baseImages as $img)
+                                <img src="{{ Storage::url($img) }}" onclick="switchMain(this)">
+                            @endforeach
+                        </div>
+                    @endif
+
+                </div>
+
+            </div>
+
+            {{-- RIGHT --}}
+            <div class="col-lg-7">
+
+                <div class="preview-wrap">
+                    <div class="preview-box">
+                        <img id="mainImage" src="{{ $hasGallery ? Storage::url($baseImages[0]) : '' }}">
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const VARIANT_INDEX = @json($variantPayload);
+        const VISUAL_INDEX = @json($visualPayload);
+        const VALUE_TO_VARIANTS = @json($valueToVariants);
+        const VARIANT_GRAPH = @json($variantGraph);
+
+        let selectedVisual = {};
+
+        const mainImage = document.getElementById('mainImage');
+        const strip = document.getElementById('variantStrip');
+
+        document.querySelectorAll('.visual-pill').forEach(btn => {
+            btn.onclick = function() {
+
+                const attr = this.dataset.attr;
+                const val = Number(this.dataset.id);
+
+                selectedVisual[attr] = val;
+
+                document.querySelectorAll(`[data-attr="${attr}"]`)
+                    .forEach(b => b.classList.remove('active'));
+
+                this.classList.add('active');
+
+                applyConstraints();
+                switchMedia(val);
+                resolveMeta();
+            };
+        });
+
+        function switchMedia(val) {
+
+            const images = VISUAL_INDEX[val] || [];
+
+            strip.innerHTML = '';
+
+            images.forEach((img, i) => {
+                const url = "/storage/" + img;
+                const el = document.createElement('img');
+                el.src = url;
+                el.onclick = () => mainImage.src = url;
+                strip.appendChild(el);
+                if (i === 0) mainImage.src = url;
+            });
+        }
+
+        function applyConstraints() {
+
+            let valid = null;
+
+            Object.values(selectedVisual).forEach(val => {
+                const variants = VALUE_TO_VARIANTS[val] || [];
+
+                if (valid === null) valid = new Set(variants);
+                else valid = new Set(variants.filter(v => valid.has(v)));
+            });
+
+            if (!valid) return;
+
+            const allowed = new Set();
+
+            valid.forEach(v => {
+                VARIANT_GRAPH[v].forEach(val => allowed.add(val));
+            });
+
+            document.querySelectorAll('.spec-pill').forEach(el => {
+                const id = Number(el.dataset.id);
+
+                if (allowed.has(id)) {
+                    el.classList.remove('spec-disabled');
+                } else {
+                    el.classList.add('spec-disabled');
+                }
+            });
+        }
+
+        function resolveMeta() {
+
+            const ids = Object.values(selectedVisual).sort((a, b) => a - b);
+            const key = ids.join('-');
+
+            const variant = VARIANT_INDEX[key];
+            if (!variant) return;
+
+            document.getElementById('variantPrice').innerText = variant.price;
+            document.getElementById('variantStock').innerText = variant.stock;
+        }
+
+        function switchMain(el) {
+            mainImage.src = el.src;
+        }
+    </script>
+
+@endsection

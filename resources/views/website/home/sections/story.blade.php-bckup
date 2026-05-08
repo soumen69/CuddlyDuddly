@@ -1,0 +1,32 @@
+<div class="w-full px-5 overflow-hidden mt-lg">
+    <div class="container max-w-container mx-auto">
+
+        <div class="relative w-full mb-10 rounded-block overflow-hidden">
+
+            <div
+                class="absolute left-6 top-5 min-w-(--min-w-4xs)
+                       p-2.5 md:px-2.5 md:py-4 flex-box rounded-label
+                       bg-pink-transparent/30 border-t-[0.5px]
+                       border-b-[0.5px] border-[#ffc0cb3b]">
+                <div>
+                    <img src="{{ asset('storage/WebsiteImages/home/labelicon.png') }}" class="max-w-6" alt="">
+                </div>
+                <span class="label">Our story</span>
+            </div>
+
+            <div class="invisible md:visible absolute -top-14 -right-[88px] max-w-md overflow-hidden z-10">
+                <img src="{{ asset('storage/WebsiteImages/home/flower-pattern.png') }}" alt="">
+            </div>
+
+            <img src="{{ asset($data['image']) }}" class="min-h-[445px] md:min-h-auto md:max-h-(--max-h-story)"
+                alt="">
+
+            <p class="absolute z-10 left-6 bottom-6 max-w-(--max-w-text) text-info">
+                {!! $data['text'] !!}
+            </p>
+
+            <div class="absolute w-full h-full inset-0 bg-linear-to-b from-transparent to-black/70"></div>
+        </div>
+
+    </div>
+</div>

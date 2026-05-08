@@ -1,0 +1,366 @@
+@extends('admin.layouts.admin')
+
+@section('title', 'Revenue Report')
+@section('content')
+
+    <style>
+        /* ---------------------------- */
+        /* Container */
+        .container-fluid {
+            max-width: 1350px;
+            margin: auto;
+            padding: 1rem 2rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #2e3a59;
+        }
+
+        /* ---------------------------- */
+        /* Metric Cards */
+        .metric-card {
+            border-radius: 20px;
+            background: linear-gradient(145deg, #ffffff, #f1f1f5);
+            box-shadow: 0 8px 30px rgba(79, 70, 229, 0.08);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(79, 70, 229, 0.15);
+        }
+
+        .metric-card i {
+            font-size: 2.5rem;
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            color: rgba(79, 70, 229, 0.2);
+        }
+
+        .metric-label {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #4f46e7;
+            margin-top: 0.3rem;
+        }
+
+        .metric-trend {
+            margin-top: 0.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .text-success {
+            color: #16a34a;
+        }
+
+        .text-danger {
+            color: #dc2626;
+        }
+
+        /* ---------------------------- */
+        /* Cards */
+        .card {
+            border-radius: 20px;
+            background: #ffffff;
+            box-shadow: 0 3px 15px rgba(71, 85, 210, 0.08);
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ---------------------------- */
+        /* Table */
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .table thead th {
+            color: #4338ca;
+            font-weight: 700;
+            border-bottom: 2px solid #e0e7ff;
+            padding-bottom: 0.75rem;
+        }
+
+        .table tbody tr {
+            background: #f3f4f6;
+            border-radius: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .table tbody tr:hover {
+            background: #e0e7ff;
+        }
+
+        .table td,
+        .table th {
+            padding: 0.9rem 1rem;
+        }
+
+        .from-data {
+            justify-content: end;
+            flex-direction: column;
+            text-align: end;
+        }
+
+        .coustom {
+            gap: 10px;
+            display: flex;
+        }
+    </style>
+
+    <div class="container-fluid">
+        <h2 class="mb-5 d-flex align-items-center text-indigo-700">
+            <i class="fa-solid fa-chart-line me-3"></i>Revenue Dashboard
+        </h2>
+
+        {{-- Metrics --}}
+        <div class="row g-4 mb-5 metric-row">
+            <div class="col-lg-3 col-md-6 col-sm-12">
+                <div class="metric-card">
+                    <i class="fa-solid fa-coins"></i>
+                    <div class="metric-label">Total Revenue</div>
+                    <div class="metric-value">₹{{ number_format($totalRevenue, 2) }}</div>
+                    @if(!is_null($revenueGrowth))
+                        <div class="metric-trend {{ $revenueGrowth > 0 ? 'text-success' : 'text-danger' }}">
+                            {!! $revenueGrowth > 0 ? '&uarr;' : '&darr;' !!} {{ number_format($revenueGrowth, 1) }}%
+                        </div>
+                    @endif
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12">
+                <div class="metric-card">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                    <div class="metric-label">Net Revenue</div>
+                    <div class="metric-value">₹{{ number_format($netRevenue, 2) }}</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12">
+                <div class="metric-card">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                    <div class="metric-label">Average Order Value</div>
+                    <div class="metric-value">₹{{ number_format($averageOrder, 2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Charts --}}
+        <div class="row chart-row g-4">
+            {{-- Revenue Trend --}}
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-semibold mb-0">Revenue Trend</h5>
+                        <form id="salesPeriodForm" class="d-flex flex-wrap gap-2 align-items-end from-data"
+                            autocomplete="off">
+                            <div class="btn-group" role="group" aria-label="Period">
+                                <button type="button" class="btn btn-outline-primary period-btn"
+                                    data-value="24hr">24h</button>
+                                <button type="button" class="btn btn-outline-primary period-btn"
+                                    data-value="week">Week</button>
+                                <button type="button" class="btn btn-outline-primary period-btn"
+                                    data-value="month">Month</button>
+                                <button type="button" class="btn btn-outline-primary period-btn"
+                                    data-value="year">Year</button>
+                                <button type="button" class="btn btn-outline-primary period-btn"
+                                    data-value="custom">Custom</button>
+                            </div>
+                            <div class="coustom">
+                                <input type="hidden" id="lineChartPeriod" name="period" value="{{ $period ?? 'month' }}">
+
+                                <input type="date" id="fromDate" name="from_date" class="form-control form-control-sm"
+                                    style="display:none; min-width:150px;"
+                                    value="{{ isset($fromDate) ? \Carbon\Carbon::parse($fromDate)->format('Y-m-d') : '' }}">
+
+                                <span id="dateDash" class="mx-1" style="display:none;">—</span>
+
+                                <input type="date" id="toDate" name="to_date" class="form-control form-control-sm"
+                                    style="display:none; min-width:150px;"
+                                    value="{{ isset($toDate) ? \Carbon\Carbon::parse($toDate)->format('Y-m-d') : '' }}">
+                            </div>
+                        </form>
+                    </div>
+
+                    @if(empty($trend))
+                        <div class="text-center text-muted py-5 fs-5">No trend data found for this period.</div>
+                    @else
+                        <canvas id="revenueTrendChart" style="min-height: 250px;"></canvas>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Top Sellers --}}
+        <div class="card mt-5">
+            <h5 class="fw-semibold text-indigo-600 mb-3">Top Sellers by Revenue</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle small mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Seller</th>
+                            <th>Email</th>
+                            <th>Revenue</th>
+                            <th>Commission ({{ $commissionRate * 100 }}%)</th>
+                            <th>Net Payout</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($topSellers as $i => $seller)
+                            <tr>
+                                <td>{{ $i + 1 }}</td>
+                                <td>{{ $seller->name }}</td>
+                                <td>{{ $seller->email }}</td>
+                                <td>₹{{ number_format($seller->total_revenue, 2) }}</td>
+                                <td>₹{{ number_format($seller->total_revenue * $commissionRate, 2) }}</td>
+                                <td>₹{{ number_format($seller->total_revenue * (1 - $commissionRate), 2) }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No sellers found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Top Products --}}
+        <div class="card mt-5">
+            <h5 class="fw-semibold text-indigo-600 mb-3">Top Products by Revenue</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle small mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($topProducts as $i => $product)
+                            <tr>
+                                <td>{{ $i + 1 }}</td>
+                                <td>{{ $product->name }}</td>
+                                <td>₹{{ number_format($product->revenue, 2) }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">No products found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let trendChart = null;
+
+            // Function to render chart
+            function renderTrendChart(labels, data) {
+                const ctx = document.getElementById('revenueTrendChart').getContext('2d');
+                if (trendChart) trendChart.destroy(); // Destroy old chart
+                trendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Revenue',
+                            data: data,
+                            borderColor: '#4F46E7',
+                            backgroundColor: 'rgba(79,70,229,0.1)',
+                            fill: true,
+                            tension: .34,
+                            pointRadius: 4,
+                            borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: v => '₹' + v } },
+                            x: { ticks: { font: { size: 12 } } }
+                        }
+                    }
+                });
+            }
+
+            // Function to fetch data
+            function fetchRevenueData(period, from_date = '', to_date = '') {
+                let url = "{{ route('admin.reports.revenue.ajax') }}";
+                let params = new URLSearchParams({ period, from_date, to_date });
+                fetch(url + '?' + params)
+                    .then(res => res.json())
+                    .then(data => {
+                        renderTrendChart(Object.keys(data.trend), Object.values(data.trend));
+
+                        // Update metric cards
+                        document.querySelector('.metric-card:nth-child(1) .metric-value').innerHTML = `₹${parseFloat(data.totalRevenue).toFixed(2)}`;
+                        document.querySelector('.metric-card:nth-child(2) .metric-value').innerHTML = `₹${parseFloat(data.netRevenue).toFixed(2)}`;
+                        document.querySelector('.metric-card:nth-child(3) .metric-value').innerHTML = `₹${parseFloat(data.averageOrder).toFixed(2)}`;
+                    })
+                    .catch(err => console.error(err));
+            }
+
+            // Period button click
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    let period = this.dataset.value;
+                    document.getElementById('lineChartPeriod').value = period;
+
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+
+                    // Show date fields only for custom
+                    if (period === 'custom') {
+                        document.getElementById('fromDate').style.display = 'block';
+                        document.getElementById('toDate').style.display = 'block';
+                        document.getElementById('dateDash').style.display = 'block';
+                    } else {
+                        document.getElementById('fromDate').style.display = 'none';
+                        document.getElementById('toDate').style.display = 'none';
+                        document.getElementById('dateDash').style.display = 'none';
+
+                        // Fetch AJAX data
+                        fetchRevenueData(period);
+                    }
+                });
+            });
+
+            // Custom date change
+            document.getElementById('toDate').addEventListener('change', function () {
+                let period = 'custom';
+                let from_date = document.getElementById('fromDate').value;
+                let to_date = document.getElementById('toDate').value;
+                fetchRevenueData(period, from_date, to_date);
+            });
+
+            // Initial load
+            fetchRevenueData("{{ $period ?? 'month' }}", "{{ \Carbon\Carbon::parse($fromDate)->format('Y-m-d') ?? '' }}", "{{ \Carbon\Carbon::parse($toDate)->format('Y-m-d') ?? '' }}");
+        });
+    </script>
+
+
+@endsection

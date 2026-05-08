@@ -1,0 +1,59 @@
+<div class="relative z-0 w-full pb-6 lg:pb-0">
+    <div class="container max-w-container mx-auto">
+
+        <div class="relative flex flex-col gap-2 mb-lg px-5">
+            <h1 class="font-nature font-medium heading leading-tight tracking-1 text-center md:text-left">
+                {!! nl2br(e($data['heading'])) !!}
+            </h1>
+
+            <p
+                class="relative max-w-(--max-w-search) mx-auto md:mx-0 text-block mt-2.5 mb-3 font-medium text-center md:text-left hero-text">
+                {!! nl2br(e($data['subheading'])) !!}
+            </p>
+
+            <a href="{{ $data['cta_url'] }}"
+                class="inline-flex max-w-max max-h-(--max-h-review) mx-auto md:mx-0 btn-wrapper lg:py-5 cursor-pointer">
+                <span class="text-block font-medium">
+                    {{ $data['cta_text'] }}
+                </span>
+
+                <div class="flex justify-center items-center cursor-pointer">
+                    @foreach ($data['avatars'] as $index => $avatar)
+                        <div class="max-w-24 h-14 {{ $index > 0 ? '-ml-14' : '' }} overflow-hidden rounded-4xl">
+                            <img src="{{ asset($avatar) }}" alt="">
+                        </div>
+                    @endforeach
+                </div>
+            </a>
+        </div>
+
+        <div class="relative pt-20 lg:pt-20 xl:pt-0">
+            <div
+                class="top block absolute z-[31] top-0 lg:top-[52%] left-1/2 -translate-x-1/2 z-10
+                       w-[60%] md:w-[80%] lg:w-[74%] h-[3%] rotate-350 lg:rotate-330">
+            </div>
+
+            <div
+                class="bottom hidden lg:block absolute z-[31] top-1/2 -translate-y-1/2
+                       left-1/2 -translate-x-1/2 z-20
+                       w-[80%] lg:w-[96%] h-[3%] lg:h-[48%] rotate-15 xl:rotate-9">
+            </div>
+
+            <img src="{{ asset($data['image']) }}" alt="mother and child"
+                class="relative z-10 mx-auto -mt-32 xl:-mt-[181px]
+                       max-w-2xs md:max-w-xs lg:max-w-md xl:max-w-xl">
+
+            <div
+                class="w-full absolute z-30 inset-x-0 bottom-0 h-[30%]
+                       bg-[linear-gradient(0deg,rgba(255,255,255,0)_-10.42%,#fff_0.33%,#fff_12.41%,rgba(255,255,255,0)_101.94%)]">
+            </div>
+        </div>
+    </div>
+
+    <svg width="1660" height="211" viewBox="0 0 1660 211" fill="none" xmlns="http://www.w3.org/2000/svg"
+        class="absolute top-[61%] md:top-[54%] max-h-64 wave">
+        <path
+            d="M1643.93 195.489L1639.98 191.338C1513.53 58.2205 1325.28 3.3496 1147.11 47.6727L1008.54 82.1433C921.356 103.831 829.42 95.6555 747.433 58.925C656.949 18.3879 554.666 12.7607 460.282 43.1269L389.353 65.9466C263.511 106.434 126.113 87.8941 15.5017 15.5016"
+            stroke="#FF486E" stroke-opacity="0.14" stroke-width="31" stroke-linecap="round" />
+    </svg>
+</div>

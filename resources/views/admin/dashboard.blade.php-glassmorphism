@@ -1,0 +1,735 @@
+@extends('admin.layouts.admin')
+
+@section('title', 'Dashboard — Admin')
+
+@push('styles')
+    <style>
+        /* ===== Glassmorphism Professional Theme ===== */
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --muted: #788396;
+            --text: #0f1724;
+            --glass-weak: rgba(255, 255, 255, 0.6);
+            --accent: rgba(76, 111, 255, 1);
+            --accent-2: rgba(50, 200, 150, 1);
+            --shadow: 0 8px 30px rgba(20, 20, 50, 0.06);
+        }
+
+        /* Dark mode */
+        body.dark {
+            --bg: #071026;
+            --card: rgba(8, 18, 32, 0.6);
+            --muted: #9fb0c8;
+            --text: #e6f0ff;
+            --glass-weak: rgba(255, 255, 255, 0.03);
+            --accent: rgba(107, 139, 255, 1);
+            --accent-2: rgba(74, 230, 182, 1);
+            --shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Container */
+        .container-fluid {
+            padding: 1.25rem 1.5rem;
+        }
+
+        /* Layout grid */
+        .grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        /* Top stats: compact row of 4 */
+        .stats {
+            grid-template-columns: repeat(4, 1fr);
+            align-items: stretch;
+        }
+
+        /* Glass stat card */
+        .glass {
+            background: linear-gradient(180deg, var(--glass-weak), rgba(255, 255, 255, 0.12));
+            backdrop-filter: blur(8px) saturate(120%);
+            border-radius: 14px;
+            padding: .9rem;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        body.dark .glass {
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .glass:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(15, 20, 40, 0.12);
+        }
+
+        /* Stat content */
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(250, 250, 255, 0.85));
+            color: var(--accent);
+            font-size: 1.35rem;
+        }
+
+        body.dark .stat-icon {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .stat-number {
+            font-weight: 700;
+            font-size: 1.4rem;
+            margin-top: .35rem;
+            letter-spacing: -0.4px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: .82rem;
+        }
+
+        /* Revenue card */
+        .revenue {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 14px;
+        }
+
+        .revenue .big {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .revenue .meta {
+            color: var(--muted);
+            text-align: right;
+            font-size: .9rem;
+        }
+
+        /* Two-column charts row */
+        .charts {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        /* Chart card fixed heights (prevents layout loop) */
+        .chart-card {
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: var(--shadow);
+            background: var(--card);
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .chart-area {
+            flex: 1;
+            position: relative;
+            min-height: 220px;
+        }
+
+        /* Make canvas fixed via CSS */
+        .chart-area canvas {
+            width: 100% !important;
+            height: 220px !important;
+        }
+
+        /* Recent orders card - compact table */
+        .recent {
+            grid-column: 1 / -1;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            background: var(--card);
+        }
+
+        .table thead th {
+            color: var(--muted);
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: none;
+        }
+
+        .table tbody tr {
+            transition: background .12s, transform .12s;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(76, 111, 255, 0.04);
+            transform: translateY(-2px);
+        }
+
+        /* Top lists row */
+        .lists {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        /* List items */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: .6rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        body.dark .list-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.02) 50%, rgba(0, 0, 0, 0.04) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s linear infinite;
+            border-radius: 10px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        .skel-rect {
+            height: 44px;
+            margin-bottom: 8px;
+        }
+
+        /* Mode toggle */
+        .mode-toggle {
+            padding: .35rem .7rem;
+            border-radius: 999px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.84));
+            display: inline-flex;
+            gap: .6rem;
+            align-items: center;
+            box-shadow: 0 6px 18px rgba(20, 20, 50, 0.04);
+            cursor: pointer;
+        }
+
+        .mode-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--card);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts {
+                grid-template-columns: 1fr;
+            }
+
+            .lists {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-icon {
+                width: 48px;
+                height: 48px;
+            }
+        }
+    </style>
+@endpush
+
+@section('content')
+    <div class="container-fluid">
+
+        {{-- Grid root --}}
+        <div class="grid stats" style="margin-bottom:1rem;">
+
+            <div class="glass" aria-hidden="false">
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                    <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+                    <div>
+                        <div class="stat-number" id="prodCount">{{ number_format($productCount) }}</div>
+                        <div class="stat-label">Products</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass">
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                    <div class="stat-icon" style="color:var(--accent-2)"><i class="bi bi-people"></i></div>
+                    <div>
+                        <div class="stat-number" id="custCount">{{ number_format($customerCount) }}</div>
+                        <div class="stat-label">Customers</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass">
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                    <div class="stat-icon" style="color:#3ab0ff"><i class="bi bi-person-badge"></i></div>
+                    <div>
+                        <div class="stat-number" id="sellerCount">{{ number_format($sellerCount) }}</div>
+                        <div class="stat-label">Sellers</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass" style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                    <div class="stat-icon" style="color:#f59e0b"><i class="bi bi-cart-check"></i></div>
+                    <div>
+                        <div class="stat-number" id="orderCount">{{ number_format($orderCount) }}</div>
+                        <div class="stat-label">Orders</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="mode-toggle" id="modeToggle" role="button" tabindex="0" aria-pressed="false"
+                        title="Toggle dark">
+                        <div class="mode-dot" id="modeDot"></div>
+                        <div style="font-size:.85rem;color:var(--muted);margin-left:.25rem;" id="modeLabel">Dark</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {{-- Revenue --}}
+        <div class="grid" style="grid-template-columns: 1fr; margin-bottom:1rem;">
+            <div class="glass revenue">
+                <div>
+                    <div style="color:var(--muted);font-size:.9rem;">Total Revenue (Delivered)</div>
+                    <div class="big" id="revenue">₹{{ number_format($revenue) }}</div>
+                    <div style="color:var(--muted);font-size:.85rem;margin-top:.25rem;">Calculated from delivered orders
+                    </div>
+                </div>
+                <div class="revenue-meta">
+                    <div style="font-size:.85rem;color:var(--muted)">Updated</div>
+                    <div style="font-size:.9rem;color:var(--muted)">{{ \Carbon\Carbon::now()->format('d M Y, H:i') }}</div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Charts row --}}
+        <div class="grid charts" style="margin-bottom:1rem;">
+            <div class="chart-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-weight:700;">Sales — Last 7 days</div>
+                    <div style="color:var(--muted);font-size:.85rem;">INR</div>
+                </div>
+                <div class="chart-area">
+                    <div id="salesSkeleton" class="skeleton" style="height:220px;border-radius:12px;"></div>
+                    <canvas id="salesChart" style="display:none;"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-weight:700;">Seller Growth — Last 6 months</div>
+                    <div style="color:var(--muted);font-size:.85rem;">count</div>
+                </div>
+                <div class="chart-area">
+                    <div id="sellerSkeleton" class="skeleton" style="height:220px;border-radius:12px;"></div>
+                    <canvas id="sellerChart" style="display:none;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        {{-- Recent Orders --}}
+        <div class="recent" style="margin-bottom:1rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+                <div style="font-weight:700;">Recent Orders</div>
+                <div style="color:var(--muted);font-size:.85rem;">Latest 10</div>
+            </div>
+
+            {{-- skeleton placeholder (visible until JS reveals table) --}}
+            <div id="ordersSkeleton">
+                @for ($i = 0; $i < 5; $i++)
+                    <div class="skeleton skel-rect" style="width:100%;border-radius:8px;"></div>
+                @endfor
+            </div>
+
+            {{-- server-rendered table (hidden initially and revealed by JS) --}}
+            <div id="ordersWrap" style="display:none;">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Customer</th>
+                                <th>Product</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($recentOrders as $order)
+                                @php
+                                    $item = $order->items->first();
+                                    $productName =
+                                        $item && $item->product ? $item->product->name : $item->product_name ?? '—';
+                                    $customerName = $order->user
+                                        ? $order->user->full_name ??
+                                            $order->user->first_name . ' ' . $order->user->last_name
+                                        : 'Guest';
+                                    $status = $order->order_status ?? 'unknown';
+                                @endphp
+                                <tr class="order-row" data-order-id="{{ $order->id }}" tabindex="0" role="button">
+                                    <td>#{{ $order->order_number ?? $order->id }}</td>
+                                    <td>{{ $customerName }}</td>
+                                    <td>{{ $productName }}</td>
+                                    <td>
+                                        @php
+                                            $badge = match ($status) {
+                                                'delivered' => 'bg-success',
+                                                'pending' => 'bg-warning',
+                                                'cancelled' => 'bg-danger',
+                                                default => 'bg-secondary',
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $badge }}">{{ ucfirst($status) }}</span>
+                                    </td>
+                                    <td>{{ optional($order->created_at)->format('d M Y') }}</td>
+                                    <td class="text-end">₹{{ number_format($order->total_amount ?? 0) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No recent orders</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- Top lists --}}
+        <div class="grid lists" style="margin-bottom:1.5rem;">
+            <div class="glass" style="padding:1rem;">
+                <div style="font-weight:700;margin-bottom:.6rem;">Top Sellers — Revenue</div>
+                <div id="topSellersSkeleton">
+                    @for ($i = 0; $i < 3; $i++)
+                        <div class="skeleton skel-rect" style="height:46px;border-radius:10px;"></div>
+                    @endfor
+                </div>
+                <div id="topSellers" style="display:none;">
+                    @foreach ($topSellersRevenue as $s)
+                        <div class="list-item">
+                            <div>{{ $s->name }}</div>
+                            <div style="font-weight:700;">₹{{ number_format($s->revenue) }}</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="glass" style="padding:1rem;">
+                <div style="font-weight:700;margin-bottom:.6rem;">Top Sellers — Orders</div>
+                <div id="topOrdersSkeleton">
+                    @for ($i = 0; $i < 3; $i++)
+                        <div class="skeleton skel-rect" style="height:46px;border-radius:10px;"></div>
+                    @endfor
+                </div>
+                <div id="topOrders" style="display:none;">
+                    @foreach ($topSellersOrders as $s)
+                        <div class="list-item">
+                            <div>{{ $s->name }}</div>
+                            <div style="font-weight:700;">{{ $s->total_orders }} orders</div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="glass" style="padding:1rem;">
+                <div style="font-weight:700;margin-bottom:.6rem;">Top Products</div>
+                <div id="topProductsSkeleton">
+                    @for ($i = 0; $i < 3; $i++)
+                        <div class="skeleton skel-rect" style="height:46px;border-radius:10px;"></div>
+                    @endfor
+                </div>
+                <div id="topProducts" style="display:none;">
+                    @foreach ($topProducts as $p)
+                        <div class="list-item">
+                            <div>{{ $p->name }}</div>
+                            <div style="text-align:right;">
+                                <div style="font-size:.85rem;color:var(--muted);">{{ $p->qty }} sold</div>
+                                <div style="font-weight:700;">₹{{ number_format($p->total) }}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+    </div> {{-- container end --}}
+@endsection
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        /*
+     Robust initialization:
+     - Wait DOMContentLoaded
+     - Reveal server content => hide skeletons first
+     - Then initialize charts (after canvas is visible)
+     - Chart colors adapt to dark mode
+     - Fixed canvas heights via CSS prevents resize loops
+    */
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Helpers
+            const $ = (id) => document.getElementById(id);
+            const show = el => {
+                if (el) el.style.display = '';
+            };
+            const hide = el => {
+                if (el) el.style.display = 'none';
+            };
+            const toNumberArray = arr => (Array.isArray(arr) ? arr.map(v => Number(v) || 0) : []);
+
+            // Theme detection
+            const isDark = () => document.body.classList.contains('dark') ||
+                (localStorage.getItem('admin_dark_mode_v1') === '1');
+
+            // Theme-aware colors
+            const getChartColors = () => {
+                if (isDark()) {
+                    return {
+                        salesBorder: getComputedStyle(document.documentElement).getPropertyValue('--accent') ||
+                            '#6b8bff',
+                        salesBg: 'rgba(107,139,255,0.12)',
+                        sellerBg: 'rgba(74,230,182,0.18)',
+                        grid: 'rgba(255,255,255,0.06)',
+                        ticks: '#cfe3ff'
+                    };
+                }
+                return {
+                    salesBorder: getComputedStyle(document.documentElement).getPropertyValue('--accent') ||
+                        '#4c6fff',
+                    salesBg: 'rgba(76,111,255,0.12)',
+                    sellerBg: 'rgba(50,200,150,0.18)',
+                    grid: 'rgba(15,20,40,0.05)',
+                    ticks: '#39507a'
+                };
+            };
+
+            // REVEAL server-rendered content and hide skeletons
+            const revealContent = () => {
+                // Orders
+                hide($('ordersSkeleton'));
+                show($('ordersWrap'));
+                // Lists
+                hide($('topSellersSkeleton'));
+                show($('topSellers'));
+                hide($('topOrdersSkeleton'));
+                show($('topOrders'));
+                hide($('topProductsSkeleton'));
+                show($('topProducts'));
+            };
+
+            // Mode toggle initialization (persisted)
+            (function() {
+                const toggle = $('modeToggle');
+                const label = $('modeLabel');
+                const key = 'admin_dark_mode_v1';
+                const apply = (dark) => {
+                    if (dark) document.body.classList.add('dark');
+                    else document.body.classList.remove('dark');
+                    label.textContent = dark ? 'Dark' : 'Light';
+                    localStorage.setItem(key, dark ? '1' : '0');
+                };
+                // initial
+                const saved = localStorage.getItem(key);
+                const prefer = saved ? saved === '1' : (window.matchMedia && window.matchMedia(
+                    '(prefers-color-scheme: dark)').matches);
+                apply(prefer);
+                if (toggle) {
+                    toggle.onclick = () => apply(!document.body.classList.contains('dark'));
+                    toggle.onkeydown = (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') toggle.click();
+                    };
+                }
+            })();
+
+            // Reveal content first (so table is visible before charts)
+            revealContent();
+
+            // After content visible, initialize charts
+            setTimeout(() => {
+                const colors = getChartColors();
+
+                // Sales chart
+                try {
+                    const salesLabels = @json($salesLabels ?? []);
+                    const salesValuesRaw = @json($salesValues ?? []);
+                    const salesValues = toNumberArray(salesValuesRaw);
+
+                    const salesCanvas = $('salesChart');
+                    if (salesCanvas) {
+                        show(salesCanvas);
+                        hide($('salesSkeleton'));
+
+                        new Chart(salesCanvas.getContext('2d'), {
+                            type: 'line',
+                            data: {
+                                labels: salesLabels,
+                                datasets: [{
+                                    data: salesValues,
+                                    borderColor: colors.salesBorder.trim(),
+                                    backgroundColor: colors.salesBg,
+                                    borderWidth: 2,
+                                    tension: 0.32,
+                                    pointRadius: 2,
+                                    pointHoverRadius: 4,
+                                    fill: true
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        grid: {
+                                            color: colors.grid
+                                        },
+                                        ticks: {
+                                            color: colors.ticks
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: colors.grid
+                                        },
+                                        ticks: {
+                                            color: colors.ticks,
+                                            callback: v => '₹' + Number(v).toLocaleString()
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error('Sales chart error:', err);
+                    hide($('salesChart'));
+                    if ($('salesSkeleton')) $('salesSkeleton').innerHTML =
+                        '<div style="padding:.8rem;color:var(--muted)">Chart unavailable</div>';
+                }
+
+                // Seller chart
+                try {
+                    const sellerLabels = @json($sellerLabels ?? []);
+                    const sellerValuesRaw = @json($sellerValues ?? []);
+                    const sellerValues = toNumberArray(sellerValuesRaw);
+
+                    const sellerCanvas = $('sellerChart');
+                    if (sellerCanvas) {
+                        show(sellerCanvas);
+                        hide($('sellerSkeleton'));
+
+                        new Chart(sellerCanvas.getContext('2d'), {
+                            type: 'bar',
+                            data: {
+                                labels: sellerLabels,
+                                datasets: [{
+                                    data: sellerValues,
+                                    backgroundColor: colors.sellerBg,
+                                    borderRadius: 8
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        },
+                                        ticks: {
+                                            color: colors.ticks
+                                        }
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: colors.grid
+                                        },
+                                        ticks: {
+                                            color: colors.ticks
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error('Seller chart error:', err);
+                    hide($('sellerChart'));
+                    if ($('sellerSkeleton')) $('sellerSkeleton').innerHTML =
+                        '<div style="padding:.8rem;color:var(--muted)">Chart unavailable</div>';
+                }
+
+                // small reveal delay for lists (make UX smooth)
+                setTimeout(() => {
+                    hide($('topSellersSkeleton'));
+                    show($('topSellers'));
+                    hide($('topOrdersSkeleton'));
+                    show($('topOrders'));
+                    hide($('topProductsSkeleton'));
+                    show($('topProducts'));
+                }, 160);
+
+            }, 150); // tiny delay to ensure DOM paints
+
+            // Row-click behavior (open order)
+            document.querySelectorAll('.order-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const id = row.dataset.orderId;
+                    if (!id) return;
+                    window.location.href = `/admin/orders/${id}`;
+                });
+                row.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') row.click();
+                });
+            });
+        });
+    </script>
+@endpush

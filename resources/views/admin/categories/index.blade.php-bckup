@@ -1,0 +1,337 @@
+@extends('admin.layouts.admin')
+
+@section('content')
+    <style>
+        /* ===== Modern UI Polish ===== */
+        #category-tree-panel {
+            background: #f8f9fa;
+            border-right: 1px solid #e2e2e2;
+        }
+
+        .tree-btn {
+            width: 100%;
+            text-align: left;
+            border-radius: 6px;
+            padding: 6px 8px;
+            transition: 0.2s;
+        }
+
+        .tree-btn:hover {
+            background: #e9ecef;
+        }
+
+        /* Smooth expand/collapse */
+        ul[data-loaded="true"] {
+            transition: all .25s ease;
+        }
+
+        /* ===== Skeleton Loader ===== */
+        .skeleton {
+            background: linear-gradient(90deg, #e2e2e2 25%, #f0f0f0 50%, #e2e2e2 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.2s infinite;
+            border-radius: 6px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-card {
+            height: 85px;
+            margin-bottom: 12px;
+        }
+    </style>
+
+
+    <div class="row">
+        <!-- LEFT CATEGORY TREE -->
+        <div class="col-md-3" id="category-tree-panel" style="height: calc(100vh - 140px); overflow:auto; padding:1rem;">
+
+            <h5 class="mb-3 fw-bold">Category Explorer</h5>
+
+            <ul id="dept-list" class="list-unstyled">
+                @foreach ($departments as $d)
+                    <li data-dept-id="{{ $d->department_id }}">
+                        <button class="btn tree-btn expand-dept" data-dept="{{ $d->department_id }}">
+                            <strong>{{ $d->department_name }}</strong>
+                            <span class="badge bg-secondary ms-1">{{ $d->product_count }}</span>
+                        </button>
+                        <ul class="master-list list-unstyled ps-3" data-loaded="false"></ul>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+
+
+        <!-- PRODUCT PANEL -->
+        <div class="col-md-9" id="product-panel" style="padding:1rem;">
+
+            <div class="d-flex mb-2">
+                <input id="product-search" class="form-control me-2" placeholder="Search products...">
+                <select id="per-page" class="form-select w-auto me-2">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                </select>
+                <button id="clear-filter" class="btn btn-outline-secondary">Clear</button>
+            </div>
+
+            <div id="product-list">
+                <div class="alert alert-info">Select a category to view products.</div>
+            </div>
+
+            <nav id="product-pagination" class="mt-3"></nav>
+        </div>
+    </div>
+@endsection
+
+
+@push('scripts')
+    <script>
+        /* ============================================================
+        Utility: Fetch wrapper
+    ============================================================ */
+        const fetchJson = url =>
+            fetch(url, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(r => r.json());
+
+        /* ============================================================
+            Utility: Simple fade loader
+        ============================================================ */
+        const showSkeleton = () => {
+            const list = document.getElementById('product-list');
+            list.innerHTML = `
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+    `;
+        };
+
+        /* ============================================================
+            Render Product Cards
+        ============================================================ */
+        function renderProducts(json) {
+            const list = document.getElementById('product-list');
+
+            if (!json.data || json.data.length === 0) {
+                list.innerHTML = `<div class="alert alert-info">No products found.</div>`;
+                document.getElementById('product-pagination').innerHTML = "";
+                return;
+            }
+
+            list.innerHTML = json.data.map(p => {
+                const img = p.images?.[0] ?
+                    `/storage/${p.images[0].image_path}` :
+                    `/images/placeholder.png`;
+
+                return `
+            <div class="card mb-2 shadow-sm border-0">
+                <div class="card-body d-flex">
+                    <img src="${img}" style="width:72px;height:72px;object-fit:cover;margin-right:12px;border-radius:8px;">
+                    <div>
+                        <strong>${p.name}</strong><br>
+                        <small class="text-muted">${p.seller ? p.seller.name : ''}</small><br>
+                        <small class="fw-bold">₹${Number(p.price).toFixed(2)}</small>
+                    </div>
+                </div>
+            </div>`;
+            }).join('');
+
+            renderPagination(json);
+        }
+
+        /* ============================================================
+            Pagination Render
+        ============================================================ */
+        function renderPagination(json) {
+            const pg = document.getElementById('product-pagination');
+            let html = "";
+
+            if (json.prev_page_url)
+                html +=
+                `<button class="btn btn-sm btn-outline-primary me-2" data-url="${json.prev_page_url}">Prev</button>`;
+
+            html += `<span class="fw-bold">Page ${json.current_page} / ${json.last_page}</span>`;
+
+            if (json.next_page_url)
+                html +=
+                `<button class="btn btn-sm btn-outline-primary ms-2" data-url="${json.next_page_url}">Next</button>`;
+
+            pg.innerHTML = html;
+        }
+
+        /* ============================================================
+            Load Products
+        ============================================================ */
+        let lastParams = {};
+
+        async function loadProducts(params = {}) {
+            lastParams = {
+                ...lastParams,
+                ...params
+            };
+            lastParams.per_page = document.getElementById('per-page').value;
+            lastParams.search = document.getElementById('product-search').value;
+
+            showSkeleton();
+
+            const qs = new URLSearchParams(lastParams).toString();
+            const json = await fetchJson(`{{ route('admin.category-explorer.products') }}?${qs}`);
+
+            renderProducts(json);
+        }
+
+        /* ============================================================
+            Category Tree Click Delegation
+        ============================================================ */
+        document.addEventListener('DOMContentLoaded', () => {
+
+            /* -------- Expand Department -------- */
+            document.querySelectorAll('.expand-dept').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const panel = btn.parentElement.querySelector('.master-list');
+                    if (panel.dataset.loaded === "true") {
+                        panel.classList.toggle('d-none');
+                        return;
+                    }
+
+                    const dept = btn.dataset.dept;
+
+                    const rows = await fetchJson(
+                        "{{ route('admin.category-explorer.children', 'master_category') }}/" +
+                        dept
+                    );
+
+                    panel.innerHTML = rows.map(r => `
+                <li>
+                    <button class="btn tree-btn expand-mc"
+                        data-mc="${r.id}" data-dept="${dept}">
+                        ${r.name}
+                        <span class="badge bg-secondary ms-1">${r.product_count}</span>
+                    </button>
+                    <ul class="st-list list-unstyled ps-3" data-loaded="false"></ul>
+                </li>
+            `).join("");
+
+                    panel.dataset.loaded = "true";
+                });
+            });
+
+
+            /* -------- Delegated Clicks for MC, ST, Category -------- */
+            document.getElementById("category-tree-panel").addEventListener("click", async (e) => {
+                const t = e.target;
+
+                /* === Expand MC === */
+                if (t.classList.contains("expand-mc")) {
+                    const mcList = t.parentElement.querySelector(".st-list");
+                    if (mcList.dataset.loaded === "true") {
+                        mcList.classList.toggle("d-none");
+                        return;
+                    }
+
+                    const mc = t.dataset.mc;
+                    const dept = t.dataset.dept;
+
+                    const rows = await fetchJson(
+                        "{{ route('admin.category-explorer.children', 'section_type') }}/" + mc +
+                        "?dept=" + dept
+                    );
+
+                    mcList.innerHTML = rows.map(r => `
+                <li>
+                    <button class="btn tree-btn expand-st"
+                        data-st="${r.id}" data-mc="${mc}" data-dept="${dept}">
+                        ${r.name}
+                        <span class="badge bg-secondary ms-1">${r.product_count}</span>
+                    </button>
+                    <ul class="cat-list list-unstyled ps-3" data-loaded="false"></ul>
+                </li>
+            `).join("");
+
+                    mcList.dataset.loaded = "true";
+                }
+
+                /* === Expand Section Type === */
+                if (t.classList.contains("expand-st")) {
+                    const catList = t.parentElement.querySelector(".cat-list");
+                    if (catList.dataset.loaded === "true") {
+                        catList.classList.toggle("d-none");
+                        return;
+                    }
+
+                    const st = t.dataset.st;
+                    const mc = t.dataset.mc;
+                    const dept = t.dataset.dept;
+
+                    const rows = await fetchJson(
+                        "{{ route('admin.category-explorer.children', 'category') }}/" +
+                        st + "?dept=" + dept + "&mc=" + mc
+                    );
+
+                    catList.innerHTML = rows.map(r => `
+                <li>
+                    <button class="btn tree-btn select-mcs" data-mcs="${r.id}">
+                        ${r.name}
+                        <span class="badge bg-secondary ms-1">${r.product_count}</span>
+                    </button>
+                </li>
+            `).join("");
+
+                    catList.dataset.loaded = "true";
+                }
+
+                /* === Final Leaf Select → Load Products === */
+                if (t.classList.contains("select-mcs")) {
+                    loadProducts({
+                        chain_type: "category",
+                        mcs_id: t.dataset.mcs
+                    });
+                }
+            });
+
+
+            /* ============================================================
+                Search, Per Page, Clear
+            ============================================================ */
+            let debounce;
+
+            document.getElementById("product-search").addEventListener("input", () => {
+                clearTimeout(debounce);
+                debounce = setTimeout(() => loadProducts(), 350);
+            });
+
+            document.getElementById("per-page").addEventListener("change", () => loadProducts());
+
+            document.getElementById("clear-filter").addEventListener("click", () => {
+                lastParams = {};
+                document.getElementById("product-search").value = "";
+                document.getElementById("product-list").innerHTML =
+                    `<div class='alert alert-info'>Select a category to view products.</div>`;
+                document.getElementById("product-pagination").innerHTML = "";
+            });
+
+            /* Pagination */
+            document.getElementById("product-pagination").addEventListener("click", (e) => {
+                const btn = e.target.closest("button[data-url]");
+                if (!btn) return;
+
+                const url = new URL(btn.dataset.url);
+                const q = Object.fromEntries(url.searchParams.entries());
+                loadProducts(q);
+            });
+        });
+    </script>
+@endpush

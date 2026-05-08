@@ -1,0 +1,126 @@
+<header class="
+        relative w-full bg-white text-white px-5">
+    <div class="container max-w-container mx-auto">
+        <div class="flex flex-wrap flex-row-reverse lg:flex-row items-center gap-4 xl:gap-6 pt-5 pb-2 md:pb-3.5">
+            <a href="{{ route('home') }}" class="hidden lg:inline-flex items-center">
+                <img src="{{ asset('storage/WebsiteImages/home/cuddlyduddlylogo1.png') }}" alt="Logo"
+                    class="max-w-28 lg:max-w-(--max-w-lg) xl:max-w-(--max-w-xl)">
+            </a>
+            <nav
+                class="flex-none lg:flex-5 xl:flex-1 w-full lg:w-auto flex items-center justify-between gap-4 xl:gap-6 order-3 lg:order-0">
+                <div
+                    class="relative w-full transform origin-top lg:w-auto lg:flex-1 flex lg:flex flex-row items-start lg:justify-end lg:items-center gap-4 xl:gap-6 lg:opacity-100 pt-0 pb-4 px-4 lg:p-0">
+                    <div
+                        class="w-full xl:max-w-[550px] lg:flex-3 md:mx-auto lg:mx-0 btn-wrapper py-0 text-black bg-white">
+                        <img src="{{ asset('storage/WebsiteImages/home/magnifying-glass.png') }}" alt=""
+                            class="max-w-icon">
+                        <input type="text" placeholder="Find baby products & beyond"
+                            class="w-full h-12 leading-12 max-w-input text-sm sm:text-base leading-none placeholder:text-block placeholder:text-black pointer-events-auto">
+                    </div>
+
+                    <a href="#!"
+                        class="w-full hidden xl:max-w-52 lg:flex-2 lg:flex justify-center items-center gap-2 btn-wrapper py-3.5 
+                        rounded-xxl border border-black/20 cursor-pointer hover:border-transparent hover:bg-black/20!">
+                        <img src="{{ asset('storage/WebsiteImages/home/home.png') }}" alt="" class="max-w-icon">
+                        <span class="text-block">Become a Vendor</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div
+                class="relative flex-1 lg:flex-none xl:flex-none flex justify-end items-center gap-2 sm:gap-4 xl:gap-6">
+                @auth('customer')
+                    @php
+                        $fullName = auth('customer')->user()->name ?? 'User';
+                        $firstName = explode(' ', trim($fullName))[0];
+                    @endphp
+                    <div id="header_cs" class="header-cs">
+                        <div class="flex items-center">
+                            <span class="header-cs-dp">
+                                <img src="{{ auth('customer')->user()->profile_image
+                                    ? asset('storage/' . auth('customer')->user()->profile_image)
+                                    : asset('storage/WebsiteImages/default-image.jpg') }}"
+                                    alt="user display">
+                            </span>
+                            <strong class="hidden sm:block">{{ $firstName }}</strong>
+                        </div>
+                        <span class="header-cs-arrow cursor-pointer">
+                            <i class="fa-solid fa-angle-down"></i>
+                        </span>
+                        <div id="navbar">
+                            <ul class="w-full rounded-md lg:rounded-lg border border-black/20 overflow-hidden bg-white">
+                                <div class="text-black font-semibold text-center">
+                                    <a href="{{ route('customer.profile') }}"
+                                        class="block px-4 py-2 text-sm hover:bg-black hover:text-white">Profile</a>
+                                    <a href="{{ route('order-history') }}"
+                                        class="block px-4 py-2 text-sm hover:bg-black hover:text-white">My
+                                        Orders</a>
+                                    <a href="#" class="block px-4 py-2 text-sm hover:bg-black hover:text-white">Manage
+                                        returns</a>
+                                    <a href="#" class="block px-4 py-2 text-sm hover:bg-black hover:text-white">Gift
+                                        Certificates</a>
+                                    <a href="#"
+                                        class="block px-4 py-2 text-sm hover:bg-black hover:text-white">Invites &
+                                        credits</a>
+                                    <a href="#" class="block px-4 py-2 text-sm hover:bg-black hover:text-white">My
+                                        reviews & Uploads</a>
+                                    <a href="#" class="block px-4 py-2 text-sm hover:bg-black hover:text-white">Notify
+                                        Me</a>
+                                    <a href="#"
+                                        class="block px-4 py-2 text-sm hover:bg-black hover:text-white">Wishlist</a>
+                                    <a href="#" class="block px-4 py-2 text-sm hover:bg-black hover:text-white">Chat
+                                        with Us</a>
+                                    <a href="#" class="block px-4 py-2 text-sm hover:bg-black hover:text-white">Sell
+                                        with Us</a>
+                                    <a href="#"
+                                        class="block lg:hidden px-4 py-2 text-sm hover:bg-black hover:text-white">
+                                        Become a Vendor</a>
+                                    <form method="POST" action="{{ route('customer.logout') }}">
+                                        @csrf
+                                        <button
+                                            class="cursor-pointer w-full text-center px-4 py-2 text-sm hover:bg-black hover:text-white">
+                                            Logout
+                                        </button>
+                                    </form>
+                                </div>
+                            </ul>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ route('customer.login') }}"
+                        class="sm:w-full w-auto flex-shrink-0 max-w-[90px] min-[480px]:max-w-(--min-w-5xs) md:max-w-[135px] max-h-10 
+                        lg:max-h-[unset] xl:min-w-(--min-w-xs) lg:flex-1 btn-wrapper bg-pink-transparent cursor-pointer hover:bg-black 
+                        max-[480px]:p-2! py-3.5 max-[480px]:gap-1.5!">
+                        <img src="{{ asset('storage/WebsiteImages/home/loginicon.png') }}" alt="login icon"
+                            class="max-w-icon max-[480px]:max-w-3!">
+                        <span class="max-[480px]:text-sm text-block text-white">Login</span>
+                    </a>
+                @endauth
+
+                <a href="{{ route('cart') }}"
+                    class="btn h-10 w-10 md:w-11 md:h-11 border-[1.5px] transition-all duration-300 cursor-pointer flex justify-center items-center flex-shrink-0 hover:border-black focus:border-black">
+                    <img src="{{ asset('storage/WebsiteImages/home/cart.png') }}"
+                        class="max-h-[15px] sm:max-h-(--max-h-icon) object-contain" alt="">
+
+                    <span id="cartBadge" class="cart__badge" style="{{ $cartCount > 0 ? '' : 'display:none' }}">
+                        {{ $cartCount ?? 0 }}
+                    </span>
+                </a>
+
+            </div>
+
+            <div class="flex-1 flex lg:hidden lg:shrink lg:justify-end xl:flex-none gap-2 sm:gap-4 xl::gap-6">
+                <button id="hamburger"
+                    class="btn cursor-pointer text-lg text-black border-0 lg:border lg:border-black/20 h-auto flex-none">
+                    <i class="fa-solid fa-ellipsis-vertical hidden! lg:block! m-auto"></i>
+                    <i class="fa-solid fa-bars block lg:hidden! m-auto"></i>
+                </button>
+                <a href="{{ route('home') }}" class="block lg:hidden">
+                    <img src="{{ asset('storage/WebsiteImages/home/cuddlyduddlylogo.png') }}" alt="Logo"
+                        class="min-w-(--min-w-logo) md:max-w-(--max-w-xl) object-contain -ml-2 md:ml-0">
+                </a>
+
+            </div>
+        </div>
+    </div>
+</header>

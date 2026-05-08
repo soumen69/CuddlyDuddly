@@ -1,0 +1,101 @@
+<div class="wrapper px-5 mt-lg">
+    <div class="container max-w-container mx-auto">
+
+        {{-- Section title --}}
+        <div class="title flex-box mt-lg mb-sm">
+            <div>
+                <img src="{{ asset('storage/WebsiteImages/home/labelicon2.png') }}" alt="label icon" class="max-w-6">
+            </div>
+            <span class="label text-black">Shop by category</span>
+        </div>
+
+        <div class="relative grid gap-4">
+
+            {{-- Decorative flower --}}
+            <div class="absolute -top-40 -right-[179px]">
+                <img src="{{ asset('storage/WebsiteImages/home/flowerpatter.png') }}" alt="flower design">
+            </div>
+
+            {{-- First two large categories --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @foreach ($data as $index => $category)
+                    @if ($index < 2)
+                        <div class="relative rounded-block overflow-hidden">
+
+                            <img src="{{ asset($category['image']) }}" alt="{{ $category['title'] }}"
+                                class="h-400 transform transition-transform duration-300 hover:scale-110 cursor-pointer">
+
+                            <div class="absolute top-6 left-3.5 label-wrapper">
+                                <span class="label text-black">
+                                    {{ $category['title'] }}
+                                </span>
+                            </div>
+
+                            <div
+                                class="absolute left-0 right-0 bottom-0 z-0 h-2/5
+                                       flex justify-end items-end blur-div">
+                            </div>
+
+                            <a href="{{ $category['url'] }}" class="group collection-btn flex-box gap-0 lg:pl-6">
+                                <span class="label text-black font-medium group-hover:text-white">
+                                    View collection
+                                </span>
+                                <span>
+                                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="max-w-5 md:max-w-6 max-h-(--max-h-arrow)
+                                                object-contain group-hover:text-white">
+                                        <path d="M13.5 27L22.5 18L13.5 9" stroke="currentColor" stroke-width="3"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </span>
+                            </a>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+
+            {{-- Remaining four categories --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                @foreach ($data as $index => $category)
+                    @if ($index >= 2)
+                        <div class="relative h-81 rounded-block overflow-hidden">
+
+                            <img src="{{ asset($category['image']) }}" alt="{{ $category['title'] }}"
+                                class="transform transition-transform duration-300 hover:scale-110 cursor-pointer">
+
+                            <div class="absolute top-6 inset-x-auto w-full text-center">
+                                <span class="label label-wrapper text-black">
+                                    {{ $category['title'] }}
+                                </span>
+                            </div>
+
+                            <div
+                                class="absolute left-0 right-0 bottom-0 z-0 h-2/5
+                                       flex justify-end items-end blur-div">
+                            </div>
+
+                            <a href="{{ $category['url'] }}"
+                                class="group w-[50px] h-[50px]
+                                      md:w-[70px] md:h-[70px]
+                                      absolute right-3.5 bottom-3.5 z-10
+                                      flex-box inline-flex p-6
+                                      bg-white/32 border border-black/22
+                                      rounded-full backdrop-blur hover:bg-black">
+                                <svg width="36" height="36" viewBox="0 0 36 36" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="max-w-5 md:max-w-[unset]
+                                            max-h-(--max-h-arrow)
+                                            object-contain group-hover:text-white">
+                                    <path d="M13.5 27L22.5 18L13.5 9" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </a>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+
+        </div>
+    </div>
+</div>

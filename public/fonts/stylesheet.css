@@ -1,0 +1,266 @@
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Black.eot');
+    src: local('ZT Nature Black'), local('ZTNature-Black'),
+        url('ZTNature-Black.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Black.woff2') format('woff2'),
+        url('ZTNature-Black.woff') format('woff'),
+        url('ZTNature-Black.ttf') format('truetype'),
+        url('ZTNature-Black.svg#ZTNature-Black') format('svg');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Bold.eot');
+    src: local('ZT Nature Bold'), local('ZTNature-Bold'),
+        url('ZTNature-Bold.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Bold.woff2') format('woff2'),
+        url('ZTNature-Bold.woff') format('woff'),
+        url('ZTNature-Bold.ttf') format('truetype'),
+        url('ZTNature-Bold.svg#ZTNature-Bold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Black_1.eot');
+    src: local('ZT Nature Black'), local('ZTNature-Black'),
+        url('ZTNature-Black_1.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Black_1.woff2') format('woff2'),
+        url('ZTNature-Black_1.woff') format('woff'),
+        url('ZTNature-Black_1.ttf') format('truetype'),
+        url('ZTNature-Black_1.svg#ZTNature-Black') format('svg');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Bold_1.eot');
+    src: local('ZT Nature Bold'), local('ZTNature-Bold'),
+        url('ZTNature-Bold_1.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Bold_1.woff2') format('woff2'),
+        url('ZTNature-Bold_1.woff') format('woff'),
+        url('ZTNature-Bold_1.ttf') format('truetype'),
+        url('ZTNature-Bold_1.svg#ZTNature-Bold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-ExtraBold.eot');
+    src: local('ZT Nature Extra Bold'), local('ZTNature-ExtraBold'),
+        url('ZTNature-ExtraBold.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-ExtraBold.woff2') format('woff2'),
+        url('ZTNature-ExtraBold.woff') format('woff'),
+        url('ZTNature-ExtraBold.ttf') format('truetype'),
+        url('ZTNature-ExtraBold.svg#ZTNature-ExtraBold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-ExtraLight.eot');
+    src: local('ZT Nature Extra Light'), local('ZTNature-ExtraLight'),
+        url('ZTNature-ExtraLight.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-ExtraLight.woff2') format('woff2'),
+        url('ZTNature-ExtraLight.woff') format('woff'),
+        url('ZTNature-ExtraLight.ttf') format('truetype'),
+        url('ZTNature-ExtraLight.svg#ZTNature-ExtraLight') format('svg');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature ExtBd';
+    src: url('ZTNature-ExtraBold_1.eot');
+    src: local('ZT Nature Extra Bold'), local('ZTNature-ExtraBold'),
+        url('ZTNature-ExtraBold_1.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-ExtraBold_1.woff2') format('woff2'),
+        url('ZTNature-ExtraBold_1.woff') format('woff'),
+        url('ZTNature-ExtraBold_1.ttf') format('truetype'),
+        url('ZTNature-ExtraBold_1.svg#ZTNature-ExtraBold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Light.eot');
+    src: local('ZT Nature Light'), local('ZTNature-Light'),
+        url('ZTNature-Light.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Light.woff2') format('woff2'),
+        url('ZTNature-Light.woff') format('woff'),
+        url('ZTNature-Light.ttf') format('truetype'),
+        url('ZTNature-Light.svg#ZTNature-Light') format('svg');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature ExtLt';
+    src: url('ZTNature-ExtraLight_1.eot');
+    src: local('ZT Nature Extra Light'), local('ZTNature-ExtraLight'),
+        url('ZTNature-ExtraLight_1.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-ExtraLight_1.woff2') format('woff2'),
+        url('ZTNature-ExtraLight_1.woff') format('woff'),
+        url('ZTNature-ExtraLight_1.ttf') format('truetype'),
+        url('ZTNature-ExtraLight_1.svg#ZTNature-ExtraLight') format('svg');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Medium.eot');
+    src: local('ZT Nature Medium'), local('ZTNature-Medium'),
+        url('ZTNature-Medium.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Medium.woff2') format('woff2'),
+        url('ZTNature-Medium.woff') format('woff'),
+        url('ZTNature-Medium.ttf') format('truetype'),
+        url('ZTNature-Medium.svg#ZTNature-Medium') format('svg');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Light_1.eot');
+    src: local('ZT Nature Light'), local('ZTNature-Light'),
+        url('ZTNature-Light_1.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Light_1.woff2') format('woff2'),
+        url('ZTNature-Light_1.woff') format('woff'),
+        url('ZTNature-Light_1.ttf') format('truetype'),
+        url('ZTNature-Light_1.svg#ZTNature-Light') format('svg');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature Med';
+    src: url('ZTNature-Medium_1.eot');
+    src: local('ZT Nature Medium'), local('ZTNature-Medium'),
+        url('ZTNature-Medium_1.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Medium_1.woff2') format('woff2'),
+        url('ZTNature-Medium_1.woff') format('woff'),
+        url('ZTNature-Medium_1.ttf') format('truetype'),
+        url('ZTNature-Medium_1.svg#ZTNature-Medium') format('svg');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Regular.eot');
+    src: local('ZT Nature Regular'), local('ZTNature-Regular'),
+        url('ZTNature-Regular.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Regular.woff2') format('woff2'),
+        url('ZTNature-Regular.woff') format('woff'),
+        url('ZTNature-Regular.ttf') format('truetype'),
+        url('ZTNature-Regular.svg#ZTNature-Regular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Regular_1.eot');
+    src: local('ZT Nature Regular'), local('ZTNature-Regular'),
+        url('ZTNature-Regular_1.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Regular_1.woff2') format('woff2'),
+        url('ZTNature-Regular_1.woff') format('woff'),
+        url('ZTNature-Regular_1.ttf') format('truetype'),
+        url('ZTNature-Regular_1.svg#ZTNature-Regular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-SemiBold.eot');
+    src: local('ZT Nature Semi Bold'), local('ZTNature-SemiBold'),
+        url('ZTNature-SemiBold.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-SemiBold.woff2') format('woff2'),
+        url('ZTNature-SemiBold.woff') format('woff'),
+        url('ZTNature-SemiBold.ttf') format('truetype'),
+        url('ZTNature-SemiBold.svg#ZTNature-SemiBold') format('svg');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Thin.eot');
+    src: local('ZT Nature Thin'), local('ZTNature-Thin'),
+        url('ZTNature-Thin.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Thin.woff2') format('woff2'),
+        url('ZTNature-Thin.woff') format('woff'),
+        url('ZTNature-Thin.ttf') format('truetype'),
+        url('ZTNature-Thin.svg#ZTNature-Thin') format('svg');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature SemBd';
+    src: url('ZTNature-SemiBold_1.eot');
+    src: local('ZT Nature Semi Bold'), local('ZTNature-SemiBold'),
+        url('ZTNature-SemiBold_1.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-SemiBold_1.woff2') format('woff2'),
+        url('ZTNature-SemiBold_1.woff') format('woff'),
+        url('ZTNature-SemiBold_1.ttf') format('truetype'),
+        url('ZTNature-SemiBold_1.svg#ZTNature-SemiBold') format('svg');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature';
+    src: url('ZTNature-Thin_1.eot');
+    src: local('ZT Nature Thin'), local('ZTNature-Thin'),
+        url('ZTNature-Thin_1.eot?#iefix') format('embedded-opentype'),
+        url('ZTNature-Thin_1.woff2') format('woff2'),
+        url('ZTNature-Thin_1.woff') format('woff'),
+        url('ZTNature-Thin_1.ttf') format('truetype'),
+        url('ZTNature-Thin_1.svg#ZTNature-Thin') format('svg');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'ZT Nature Variable';
+    src: url('ZTNatureVariable-Thin.eot');
+    src: local('ZT Nature Variable Thin'), local('ZTNatureVariable-Thin'),
+        url('ZTNatureVariable-Thin.eot?#iefix') format('embedded-opentype'),
+        url('ZTNatureVariable-Thin.woff2') format('woff2'),
+        url('ZTNatureVariable-Thin.woff') format('woff'),
+        url('ZTNatureVariable-Thin.ttf') format('truetype'),
+        url('ZTNatureVariable-Thin.svg#ZTNatureVariable-Thin') format('svg');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
