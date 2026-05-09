@@ -224,6 +224,16 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
         ->group(function () {
 
             Route::get(
+                '/product/{productId}/details',
+                [BulkImageController::class, 'productDetails']
+            )->name('product.details');
+
+            Route::post(
+                '/ajax-upload',
+                [BulkImageController::class, 'ajaxUpload']
+            )->name('ajax.upload');
+
+            Route::get(
                 '/{batchId}',
                 [BulkImageController::class, 'gateway']
             )->name('gateway');
@@ -252,6 +262,11 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
                 '/{batchId}/review',
                 [BulkImageController::class, 'review']
             )->name('review');
+
+            Route::post(
+                '/{batchId}/commit',
+                [BulkImageController::class, 'commitImages']
+            )->name('commit');
         });
 
 

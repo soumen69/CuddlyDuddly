@@ -40,12 +40,44 @@ class BulkImageZipProcessor
         $errors = [];
         $inserted = 0;
 
-        $products = scandir($extractPath);
+        $entries = collect(scandir($extractPath))
+
+            ->filter(
+                fn($item) =>
+                !in_array($item, [
+                    '.',
+                    '..',
+                    '__MACOSX',
+                ])
+            )
+
+            ->values();
+
+        $rootPath = $extractPath;
+
+        if ($entries->count() === 1) {
+
+            $possibleRoot =
+                $extractPath
+                . '/'
+                . $entries->first();
+
+            if (is_dir($possibleRoot)) {
+
+                $rootPath = $possibleRoot;
+            }
+        }
+
+        $products = scandir($rootPath);
 
         foreach ($products as $productFolder) {
 
             if (
-                in_array($productFolder, ['.', '..'])
+                in_array($productFolder, [
+                    '.',
+                    '..',
+                    '__MACOSX',
+                ])
             ) {
                 continue;
             }
@@ -62,15 +94,18 @@ class BulkImageZipProcessor
             if (!$product) {
 
                 $errors[] = [
+
                     'product' => $productFolder,
-                    'message' => 'Unknown product code.',
+
+                    'message' =>
+                    'Unknown product code.',
                 ];
 
                 continue;
             }
 
             $fullPath =
-                $extractPath
+                $rootPath
                 . '/'
                 . $productFolder;
 
