@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Domain\Catalog\Bulk\Commit\BulkCommitEngine;
+use Illuminate\Support\Facades\DB;
 
 class CommitBulkBatchJob implements ShouldQueue
 {
@@ -24,8 +25,32 @@ class CommitBulkBatchJob implements ShouldQueue
         BulkCommitEngine $engine
     ): void {
 
-        $engine->commitBatch(
-            $this->batchId
-        );
+        try {
+
+            $engine->commitBatch(
+                $this->batchId
+            );
+        } catch (\Throwable $e) {
+
+            DB::table('ingestion_batches')
+
+                ->where(
+                    'id',
+                    $this->batchId
+                )
+
+                ->update([
+
+                    'status' =>
+                    'commit_failed',
+
+                    'updated_at' =>
+                    now(),
+                ]);
+
+            report($e);
+
+            throw $e;
+        }
     }
 }

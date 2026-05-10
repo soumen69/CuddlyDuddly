@@ -50,4 +50,12 @@ class ProductVariant extends Model
             'attribute_value_id'
         );
     }
+
+    public function variantAttributeValues()
+    {
+        return $this->hasMany(
+            VariantAttributeValue::class,
+            'variant_id'
+        );
+    }
 }

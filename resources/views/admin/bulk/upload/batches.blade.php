@@ -50,20 +50,28 @@
                                     Ready For Commit
                                 </option>
 
-                                <option value="queued" @selected(request('status') == 'queued')>
-                                    Queued
-                                </option>
-
-                                <option value="partially_committed" @selected(request('status') == 'partially_committed')>
-                                    Partially Committed
+                                <option value="commit_queued" @selected(request('status') == 'commit_queued')>
+                                    Commit Queued
                                 </option>
 
                                 <option value="committed" @selected(request('status') == 'committed')>
                                     Committed
                                 </option>
 
-                                <option value="commit_failed" @selected(request('status') == 'commit_failed')>
-                                    Commit Failed
+                                <option value="image_upload_pending" @selected(request('status') == 'image_upload_pending')>
+                                    Image Upload Pending
+                                </option>
+
+                                <option value="image_upload_in_progress" @selected(request('status') == 'image_upload_in_progress')>
+                                    Image Upload In Progress
+                                </option>
+
+                                <option value="completed" @selected(request('status') == 'completed')>
+                                    Completed
+                                </option>
+
+                                <option value="failed" @selected(request('status') == 'failed')>
+                                    Failed
                                 </option>
                             </select>
                         </div>
@@ -126,12 +134,22 @@
 
                                     @php
                                         $statusClass = match ($batch->status) {
+                                            'completed' => 'success',
+
+                                            'image_upload_pending' => 'warning',
+
+                                            'image_upload_in_progress' => 'info',
+
+                                            'commit_queued' => 'primary',
+
                                             'committed' => 'success',
-                                            'partially_committed' => 'warning',
-                                            'queued' => 'info',
-                                            'ready_for_commit' => 'primary',
+
+                                            'ready_for_commit' => 'dark',
+
                                             'review_required' => 'warning',
-                                            'commit_failed' => 'danger',
+
+                                            'failed' => 'danger',
+
                                             default => 'secondary',
                                         };
                                     @endphp
@@ -174,16 +192,30 @@
 
                                 <td>
                                     {{ \Carbon\Carbon::parse($batch->created_at)->format('d M Y h:i A') }} </td>
-
                                 <td>
-
                                     <div class="d-flex gap-2 flex-wrap">
-
+                                        {{-- REVIEW --}}
                                         <a href="{{ route('admin.bulk.batch.review', $batch->id) }}"
                                             class="btn btn-sm btn-dark">
                                             <i class="bi bi-eye me-1"></i>
                                             Review
                                         </a>
+                                        {{-- IMAGE FLOW --}}
+                                        @if (in_array($batch->status, ['image_upload_pending', 'image_upload_in_progress']))
+                                            <a href="{{ route('admin.bulk.images.gateway', $batch->id) }}"
+                                                class="btn btn-sm btn-warning">
+                                                <i class="bi bi-images me-1"></i>
+                                                {{ $batch->status === 'image_upload_pending' ? 'Upload Images' : 'Resume Images' }}
+                                            </a>
+                                        @endif
+                                        {{-- COMPLETED --}}
+                                        @if ($batch->status === 'completed')
+                                            <span class="badge bg-success px-3 py-2">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Completed
+                                            </span>
+                                        @endif
+
                                     </div>
 
                                 </td>

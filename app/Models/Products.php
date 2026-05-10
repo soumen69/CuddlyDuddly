@@ -18,6 +18,7 @@ class Products extends Model
         'product_categories_id',
         'product_sub_categories_id',
         'seller_id',
+        'bulk_batch_id',
         'name',
         'short_description',
         'slug',
@@ -36,6 +37,7 @@ class Products extends Model
         'cancellation_policy',
         'featured',
         'status',
+        'image_upload_status'
     ];
 
     protected static function boot()

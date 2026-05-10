@@ -37,7 +37,19 @@ class BulkCommitEngine
 
         foreach ($products as $staged) {
 
-            DB::transaction(function () use ($staged) {
+            DB::transaction(function () use (
+                $staged,
+                $batchId
+            ) {
+
+                if (
+                    Products::where(
+                        'product_code',
+                        $staged->product_code
+                    )->exists()
+                ) {
+                    return;
+                }
 
                 $compiled = json_decode(
                     $staged->compiled_payload,
@@ -45,24 +57,24 @@ class BulkCommitEngine
                 );
 
                 $this->commitProductFamily(
-                    $compiled
+                    $compiled,
+                    $batchId
                 );
             });
         }
 
 
         DB::table('ingestion_batches')
-
             ->where('id', $batchId)
-
             ->update([
-                'status' => 'committed',
+                'status' => 'image_upload_pending',
                 'updated_at' => now(),
             ]);
     }
 
     protected function commitProductFamily(
-        array $compiled
+        array $compiled,
+        int $batchId
     ): void {
 
         $productData =
@@ -118,6 +130,10 @@ class BulkCommitEngine
                 ->sum('stock'),
 
             'status' => 1,
+
+            'bulk_batch_id' => $batchId,
+
+            'image_upload_status' => 'pending',
         ]);
 
         foreach (

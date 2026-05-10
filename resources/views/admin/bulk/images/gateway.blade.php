@@ -92,7 +92,6 @@
 
             {{-- SKIP --}}
             <div class="col-md-4">
-
                 <div class="card border-0 shadow-sm h-100">
 
                     <div class="card-body d-flex flex-column">
@@ -107,14 +106,23 @@
 
                         <p class="text-muted small flex-grow-1">
 
-                            You can upload images later.
-                            Products remain pending image completion.
+                            You can continue image upload later from
+                            Bulk Upload History.
+                            Your products will remain in pending image state.
 
                         </p>
 
-                        <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
-                            Continue Later
-                        </a>
+                        <form method="POST" action="{{ route('admin.bulk.images.skip', $batch->id) }}">
+
+                            @csrf
+
+                            <button class="btn btn-outline-secondary w-100">
+
+                                Continue Later
+
+                            </button>
+
+                        </form>
 
                     </div>
                 </div>

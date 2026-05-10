@@ -267,7 +267,15 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
                 '/{batchId}/commit',
                 [BulkImageController::class, 'commitImages']
             )->name('commit');
+
+            Route::post(
+                '/{batchId}/skip',
+                [BulkImageController::class, 'skipForNow']
+            )->name('skip');
         });
+
+
+
 
 
 

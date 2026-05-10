@@ -117,20 +117,20 @@ class BulkUploadController extends Controller
             WHERE ip.batch_id = ingestion_batches.id
             AND ip.status = 'approved'
         ) as approved_products
-    "),
+        "),
 
                 DB::raw("
-        (
-            SELECT COUNT(*)
-            FROM ingestion_products ip
-            WHERE ip.batch_id = ingestion_batches.id
-            AND ip.status IN (
-                'compile_failed',
-                'validation_failed',
-                'rejected'
-            )
-        ) as failed_products
-    ")
+            (
+                SELECT COUNT(*)
+                FROM ingestion_products ip
+                WHERE ip.batch_id = ingestion_batches.id
+                AND ip.status IN (
+                    'compile_failed',
+                    'validation_failed',
+                    'rejected'
+                )
+            ) as failed_products
+        ")
             )
             ->latest('ingestion_batches.id');
 
@@ -232,16 +232,30 @@ class BulkUploadController extends Controller
             );
         }
 
-        CommitBulkBatchJob::dispatch(
-            $batchId
-        );
+        CommitBulkBatchJob::dispatch($batchId);
 
-        return redirect()->route(
-            'admin.bulk.images.gateway',
-            $batchId
-        )->with(
+        DB::table('ingestion_batches')
+            ->where('id', $batchId)
+            ->update([
+                'status' => 'queued',
+                'updated_at' => now(),
+            ]);
+
+        return back()->with(
             'success',
             'Batch queued successfully.'
         );
+
+        // CommitBulkBatchJob::dispatch(
+        //     $batchId
+        // );
+
+        // return redirect()->route(
+        //     'admin.bulk.images.gateway',
+        //     $batchId
+        // )->with(
+        //     'success',
+        //     'Batch queued successfully.'
+        // );
     }
 }
