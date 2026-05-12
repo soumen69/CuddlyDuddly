@@ -45,12 +45,6 @@ class BulkValidationEngine
 
             $seenGroupCodes[$groupCode] = true;
 
-            /*
-            |--------------------------------------------------------------------------
-            | EXISTING SYSTEM GROUP CODE
-            |--------------------------------------------------------------------------
-            */
-
             if (
                 $this->conflicts
                 ->groupCodeExists($groupCode)

@@ -38,6 +38,7 @@
 
                         <div class="col-md-3">
                             <select name="status" class="form-select form-select-sm">
+
                                 <option value="">
                                     All Status
                                 </option>
@@ -50,12 +51,20 @@
                                     Ready For Commit
                                 </option>
 
-                                <option value="commit_queued" @selected(request('status') == 'commit_queued')>
-                                    Commit Queued
+                                <option value="queued" @selected(request('status') == 'queued')>
+                                    Queued
+                                </option>
+
+                                <option value="partially_committed" @selected(request('status') == 'partially_committed')>
+                                    Partially Committed
                                 </option>
 
                                 <option value="committed" @selected(request('status') == 'committed')>
                                     Committed
+                                </option>
+
+                                <option value="commit_failed" @selected(request('status') == 'commit_failed')>
+                                    Commit Failed
                                 </option>
 
                                 <option value="image_upload_pending" @selected(request('status') == 'image_upload_pending')>
@@ -66,13 +75,10 @@
                                     Image Upload In Progress
                                 </option>
 
-                                <option value="completed" @selected(request('status') == 'completed')>
-                                    Completed
+                                <option value="image_completed" @selected(request('status') == 'image_completed')>
+                                    Image Completed
                                 </option>
 
-                                <option value="failed" @selected(request('status') == 'failed')>
-                                    Failed
-                                </option>
                             </select>
                         </div>
 
@@ -134,22 +140,15 @@
 
                                     @php
                                         $statusClass = match ($batch->status) {
-                                            'completed' => 'success',
-
-                                            'image_upload_pending' => 'warning',
-
-                                            'image_upload_in_progress' => 'info',
-
-                                            'commit_queued' => 'primary',
-
-                                            'committed' => 'success',
-
-                                            'ready_for_commit' => 'dark',
-
                                             'review_required' => 'warning',
-
-                                            'failed' => 'danger',
-
+                                            'ready_for_commit' => 'dark',
+                                            'queued' => 'primary',
+                                            'partially_committed' => 'info',
+                                            'committed' => 'success',
+                                            'commit_failed' => 'danger',
+                                            'image_upload_pending' => 'warning',
+                                            'image_upload_in_progress' => 'info',
+                                            'image_completed' => 'success',
                                             default => 'secondary',
                                         };
                                     @endphp
@@ -209,13 +208,12 @@
                                             </a>
                                         @endif
                                         {{-- COMPLETED --}}
-                                        @if ($batch->status === 'completed')
+                                        @if ($batch->status === 'image_completed')
                                             <span class="badge bg-success px-3 py-2">
                                                 <i class="bi bi-check-circle me-1"></i>
                                                 Completed
                                             </span>
                                         @endif
-
                                     </div>
 
                                 </td>
@@ -226,7 +224,7 @@
 
                             <tr>
 
-                                <td colspan="7">
+                                <td colspan="9">
 
                                     <div class="text-center py-5">
 

@@ -1,15 +1,14 @@
 <?php
 
-
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Domain\Catalog\Bulk\Builder\TemplateConfigBuilder;
+use App\Domain\Catalog\Bulk\Jobs\CommitBulkBatchJob;
+use App\Domain\Catalog\Bulk\Parser\ExcelBulkRowParser;
 use App\Domain\Catalog\Bulk\Pipeline\BulkUploadPipeline;
 use App\Domain\Catalog\Bulk\Review\EnterpriseBatchReviewService;
-use App\Domain\Catalog\Bulk\Jobs\CommitBulkBatchJob;
-use App\Domain\Catalog\Bulk\Builder\TemplateConfigBuilder;
-use App\Domain\Catalog\Bulk\Parser\ExcelBulkRowParser;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class BulkUploadController extends Controller
@@ -28,7 +27,7 @@ class BulkUploadController extends Controller
             'excel' => [
                 'required',
                 'file',
-                'mimes:xlsx,xls'
+                'mimes:xlsx,xls',
             ],
         ]);
 
@@ -201,7 +200,7 @@ class BulkUploadController extends Controller
         EnterpriseBatchReviewService $review
     ) {
         $request->validate([
-            'reason' => 'required|string|max:500'
+            'reason' => 'required|string|max:500',
         ]);
 
         $review->rejectProduct(
@@ -224,7 +223,7 @@ class BulkUploadController extends Controller
             $batchId
         );
 
-        if (!$canCommit['allowed']) {
+        if (! $canCommit['allowed']) {
 
             return back()->with(
                 'error',
@@ -241,21 +240,12 @@ class BulkUploadController extends Controller
                 'updated_at' => now(),
             ]);
 
-        return back()->with(
+        return redirect()->route(
+            'admin.bulk.images.gateway',
+            $batchId
+        )->with(
             'success',
-            'Batch queued successfully.'
+            'Products are being processed. You may continue image upload preparation.'
         );
-
-        // CommitBulkBatchJob::dispatch(
-        //     $batchId
-        // );
-
-        // return redirect()->route(
-        //     'admin.bulk.images.gateway',
-        //     $batchId
-        // )->with(
-        //     'success',
-        //     'Batch queued successfully.'
-        // );
     }
 }

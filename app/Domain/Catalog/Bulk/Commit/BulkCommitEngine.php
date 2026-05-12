@@ -168,7 +168,7 @@ class BulkCommitEngine
 
                     'sku' =>
                     $this->sku->variantSku(
-                        $productData['name'],
+                        $product->product_code,
                         $variantLabels
                     ),
 

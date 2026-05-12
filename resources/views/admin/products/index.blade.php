@@ -463,7 +463,7 @@
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td colspan="9" class="text-center text-muted py-4">
+                                            <td colspan="10" class="text-center text-muted py-4">
                                                 <i class="bi bi-box-seam fs-4 d-block mb-1"></i>
                                                 No products found
                                             </td>

@@ -2,17 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-use ZipArchive;
+use App\Domain\Catalog\Bulk\Images\BulkImageCommitEngine;
+use App\Domain\Catalog\Bulk\Images\BulkImageZipProcessor;
+use App\Http\Controllers\Controller;
+use App\Models\ProductAttributeValueImage;
+use App\Models\ProductImage;
+use App\Models\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Controller;
-use App\Domain\Catalog\Bulk\Images\BulkImageZipProcessor;
-use App\Domain\Catalog\Bulk\Images\BulkImageCommitEngine;
-use Illuminate\Support\Facades\Storage;
-use App\Models\Products;
-use App\Models\ProductImage;
-use App\Models\AttributeValue;
-use App\Models\ProductAttributeValueImage;
+use ZipArchive;
 
 class BulkImageController extends Controller
 {
@@ -22,7 +20,7 @@ class BulkImageController extends Controller
             ->where('id', $batchId)
             ->first();
 
-        abort_if(!$batch, 404);
+        abort_if(! $batch, 404);
 
         return view(
             'admin.bulk.images.gateway',
@@ -37,7 +35,7 @@ class BulkImageController extends Controller
         $products = Products::query()
 
             ->with([
-                'variants.values.attribute'
+                'variants.values.attribute',
             ])
 
             ->where(
@@ -53,7 +51,7 @@ class BulkImageController extends Controller
             'app/temp'
         );
 
-        if (!file_exists($tempDir)) {
+        if (! file_exists($tempDir)) {
 
             mkdir(
                 $tempDir,
@@ -64,16 +62,16 @@ class BulkImageController extends Controller
 
         $tempPath =
             $tempDir
-            . '/bulk-image-template-'
-            . $batchId
-            . '.zip';
+            .'/bulk-image-template-'
+            .$batchId
+            .'.zip';
 
         if (file_exists($tempPath)) {
 
             unlink($tempPath);
         }
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
 
         $opened = $zip->open(
 
@@ -112,19 +110,19 @@ class BulkImageController extends Controller
 
             $visualValues =
                 $visualValues
-                ->unique('id');
+                    ->unique('id');
 
             if ($visualValues->isEmpty()) {
 
                 $folder =
-                    $product->product_code . '/';
+                    $product->product_code.'/';
 
                 $zip->addEmptyDir($folder);
 
                 $zip->addFromString(
 
                     $folder
-                        . 'PLACE_IMAGES_HERE.txt',
+                        .'PLACE_IMAGES_HERE.txt',
 
                     'Replace this file with minimum 4 images.'
                 );
@@ -136,16 +134,16 @@ class BulkImageController extends Controller
 
                 $folder =
                     $product->product_code
-                    . '/'
-                    . $value->value
-                    . '/';
+                    .'/'
+                    .$value->value
+                    .'/';
 
                 $zip->addEmptyDir($folder);
 
                 $zip->addFromString(
 
                     $folder
-                        . 'PLACE_IMAGES_HERE.txt',
+                        .'PLACE_IMAGES_HERE.txt',
 
                     'Replace this file with minimum 4 images.'
                 );
@@ -166,7 +164,7 @@ class BulkImageController extends Controller
         $baseProducts = Products::query()
 
             ->with([
-                'variants.values.attribute'
+                'variants.values.attribute',
             ])
 
             ->where(
@@ -179,7 +177,7 @@ class BulkImageController extends Controller
                 [
                     'pending',
                     'skipped',
-                    'in_progress'
+                    'in_progress',
                 ]
             )
 
@@ -206,7 +204,7 @@ class BulkImageController extends Controller
 
             $visualValues =
                 $visualValues
-                ->unique('id');
+                    ->unique('id');
 
             if ($visualValues->isEmpty()) {
 
@@ -214,17 +212,13 @@ class BulkImageController extends Controller
 
                     'type' => 'simple',
 
-                    'product_id' =>
-                    $product->id,
+                    'product_id' => $product->id,
 
-                    'attribute_value_id' =>
-                    null,
+                    'attribute_value_id' => null,
 
-                    'label' =>
-
-                    $product->product_code
-                        . ' - '
-                        . $product->name,
+                    'label' => $product->product_code
+                        .' - '
+                        .$product->name,
                 ];
 
                 continue;
@@ -234,22 +228,17 @@ class BulkImageController extends Controller
 
                 $products[] = [
 
-                    'type' =>
-                    'visual_variant',
+                    'type' => 'visual_variant',
 
-                    'product_id' =>
-                    $product->id,
+                    'product_id' => $product->id,
 
-                    'attribute_value_id' =>
-                    $value->id,
+                    'attribute_value_id' => $value->id,
 
-                    'label' =>
-
-                    $product->product_code
-                        . ' - '
-                        . $product->name
-                        . ' - '
-                        . $value->value,
+                    'label' => $product->product_code
+                        .' - '
+                        .$product->name
+                        .' - '
+                        .$value->value,
                 ];
             }
         }
@@ -271,7 +260,7 @@ class BulkImageController extends Controller
             'zip' => [
                 'required',
                 'file',
-                'mimes:zip'
+                'mimes:zip',
             ],
         ]);
 
@@ -288,14 +277,12 @@ class BulkImageController extends Controller
         )->with(
             'success',
             $result['inserted']
-                . ' images staged successfully.'
+                .' images staged successfully.'
         );
     }
 
-    public function review(
-        int $batchId
-    ) {
-
+    public function review(int $batchId)
+    {
         $images = DB::table(
             'ingestion_product_images'
         )
@@ -320,37 +307,64 @@ class BulkImageController extends Controller
         );
     }
 
-    public function commitImages(
-        int $batchId,
-        BulkImageCommitEngine $engine
-    ) {
+    public function commitImages(int $batchId, BulkImageCommitEngine $engine)
+    {
 
         $result = $engine->commit(
             $batchId
         );
 
+        $products = Products::query()
+            ->where('bulk_batch_id', $batchId)
+            ->get();
+
+        foreach ($products as $product) {
+
+            $hasSimpleImages = ProductImage::where(
+                'product_id',
+                $product->id
+            )->exists();
+
+            $hasVariantImages = ProductAttributeValueImage::where(
+                'product_id',
+                $product->id
+            )->exists();
+
+            $product->update([
+
+                'image_upload_status' => ($hasSimpleImages || $hasVariantImages)
+                        ? 'completed'
+                        : 'pending',
+            ]);
+        }
+
+        DB::table('ingestion_batches')
+            ->where('id', $batchId)
+            ->update([
+
+                'status' => 'image_completed',
+
+                'updated_at' => now(),
+            ]);
+
         return redirect()
 
-            ->route('admin.products.index')
+            ->route('admin.bulk.batches.index')
 
             ->with(
                 'success',
                 $result['inserted']
-                    . ' images committed successfully.'
+                    .' images committed successfully.'
             );
     }
 
-
-    public function productDetails(
-        int $productId
-    ) {
+    public function productDetails(int $productId)
+    {
 
         $product = Products::query()
-
             ->with([
-                'variants.values.attribute'
+                'variants.values.attribute',
             ])
-
             ->findOrFail($productId);
 
         $visualValues = collect();
@@ -375,8 +389,8 @@ class BulkImageController extends Controller
 
         $visualValues =
             $visualValues
-            ->unique('id')
-            ->values();
+                ->unique('id')
+                ->values();
 
         return response()->json([
 
@@ -386,53 +400,54 @@ class BulkImageController extends Controller
 
                 'name' => $product->name,
 
-                'product_code' =>
-                $product->product_code,
+                'product_code' => $product->product_code,
             ],
 
-            'type' =>
-
-            $visualValues->count()
+            'type' => $visualValues->count()
                 ? 'visual_variant'
                 : 'simple',
 
-            'visual_values' =>
-            $visualValues,
+            'visual_values' => $visualValues,
         ]);
     }
 
-    public function ajaxUpload(
-        Request $request
-    ) {
-
+    public function ajaxUpload(Request $request)
+    {
         $request->validate([
 
             'product_id' => [
                 'required',
-                'exists:products,id'
+                'exists:products,id',
             ],
 
             'images' => [
                 'required',
                 'array',
-                'min:4'
+                'min:4',
             ],
 
             'images.*' => [
                 'image',
                 'mimes:jpg,jpeg,png,webp',
-                'max:5000'
+                'max:5000',
             ],
         ]);
 
-        $product = Products::findOrFail(
-            $request->product_id
-        );
+        // $product = Products::findOrFail(
+        //     $request->product_id
+        // );
 
-        $attributeValueId =
-            $request->attribute_value_id;
+        $product = Products::query()
+            ->with([
+                'variants.values.attribute',
+            ])
+            ->findOrFail(
+                $request->product_id
+            );
 
-        if (!$attributeValueId) {
+        $attributeValueId = $request->attribute_value_id;
+
+        if (! $attributeValueId) {
 
             ProductImage::where(
                 'product_id',
@@ -454,59 +469,110 @@ class BulkImageController extends Controller
         }
 
         foreach (
-            $request->file('images')
-            as $index => $image
+            $request->file('images') as $index => $image
         ) {
 
             $path = $image->store(
 
                 $attributeValueId
-                    ? 'products/variants/' . date('Y/m')
-                    : 'products/' . date('Y/m'),
+                    ? 'products/variants/'.date('Y/m')
+                    : 'products/'.date('Y/m'),
 
                 'public'
             );
 
-            if (!$attributeValueId) {
+            if (! $attributeValueId) {
 
                 ProductImage::create([
 
-                    'product_id' =>
-                    $product->id,
+                    'product_id' => $product->id,
 
-                    'image_path' =>
-                    $path,
+                    'image_path' => $path,
 
-                    'is_primary' =>
-                    $index === 0 ? 1 : 0,
+                    'is_primary' => $index === 0 ? 1 : 0,
                 ]);
             } else {
 
                 ProductAttributeValueImage::create([
 
-                    'product_id' =>
-                    $product->id,
+                    'product_id' => $product->id,
 
-                    'attribute_value_id' =>
-                    $attributeValueId,
+                    'attribute_value_id' => $attributeValueId,
 
-                    'image_path' =>
-                    $path,
+                    'image_path' => $path,
 
-                    'is_primary' =>
-                    $index === 0 ? 1 : 0,
+                    'is_primary' => $index === 0 ? 1 : 0,
 
-                    'sort_order' =>
-                    $index,
+                    'sort_order' => $index,
                 ]);
             }
         }
 
-        $product->update([
+        $visualAttributeValueIds = collect();
 
-            'image_upload_status' =>
-            'completed'
-        ]);
+        foreach ($product->variants as $variant) {
+
+            foreach ($variant->values as $value) {
+
+                if (
+                    optional($value->attribute)->is_visual
+                ) {
+
+                    $visualAttributeValueIds->push(
+                        $value->id
+                    );
+                }
+            }
+        }
+
+        $visualAttributeValueIds = $visualAttributeValueIds
+            ->unique()
+            ->values();
+
+        if ($visualAttributeValueIds->isEmpty()) {
+
+            $hasImages = ProductImage::where(
+                'product_id',
+                $product->id
+            )->exists();
+
+            $product->update([
+                'image_upload_status' => $hasImages
+                    ? 'completed'
+                    : 'pending',
+            ]);
+
+        } else {
+
+            $uploadedVariantIds =
+                ProductAttributeValueImage::where(
+                    'product_id',
+                    $product->id
+                )
+                    ->distinct()
+                    ->pluck('attribute_value_id');
+
+            $totalRequired =
+                $visualAttributeValueIds->count();
+
+            $totalUploaded =
+                $visualAttributeValueIds
+                    ->intersect($uploadedVariantIds)
+                    ->count();
+
+            $status = match (true) {
+
+                $totalUploaded === 0 => 'pending',
+
+                $totalUploaded < $totalRequired => 'in_progress',
+
+                default => 'completed',
+            };
+
+            $product->update([
+                'image_upload_status' => $status,
+            ]);
+        }
 
         $this->syncBatchImageStatus(
             $product->bulk_batch_id
@@ -516,8 +582,7 @@ class BulkImageController extends Controller
 
             'success' => true,
 
-            'message' =>
-            'Images uploaded successfully.',
+            'message' => 'Images uploaded successfully.',
         ]);
     }
 
@@ -535,14 +600,12 @@ class BulkImageController extends Controller
 
         $allCompleted =
             $products->every(
-                fn($p)
-                => $p->image_upload_status === 'completed'
+                fn ($p) => $p->image_upload_status === 'completed'
             );
 
         $hasCompleted =
             $products->contains(
-                fn($p)
-                => $p->image_upload_status === 'completed'
+                fn ($p) => $p->image_upload_status === 'completed'
             );
 
         DB::table('ingestion_batches')
@@ -550,14 +613,13 @@ class BulkImageController extends Controller
             ->where('id', $batchId)
 
             ->update([
-
                 'status' => $allCompleted
-                    ? 'completed'
-                    : (
-                        $hasCompleted
-                        ? 'image_upload_in_progress'
-                        : 'image_upload_pending'
-                    ),
+                ? 'image_completed'
+                : (
+                    $hasCompleted
+                    ? 'image_upload_in_progress'
+                    : 'image_upload_pending'
+                ),
 
                 'updated_at' => now(),
             ]);
@@ -573,8 +635,7 @@ class BulkImageController extends Controller
 
             ->update([
 
-                'status' =>
-                'image_upload_pending',
+                'status' => 'image_upload_pending',
 
                 'updated_at' => now(),
             ]);

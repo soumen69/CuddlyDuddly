@@ -73,7 +73,7 @@ class AdminController extends Controller
             ->exists();
 
         $sellerExists = Sellers::where('email', $emailOrPhone)
-            ->orWhere('phone', $emailOrPhone)
+            ->orWhere('mobile', $emailOrPhone)
             ->exists();
 
         // If both accounts exist, force the user to select correct portal/user type
@@ -172,7 +172,7 @@ class AdminController extends Controller
             Auth::guard('seller')->logout();
             $redirect = 'seller.login';
         } else {
-            $redirect = 'login';
+            $redirect = '/seller';
         }
 
         $request->session()->invalidate();
