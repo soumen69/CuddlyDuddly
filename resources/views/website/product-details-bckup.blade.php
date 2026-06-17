@@ -133,8 +133,6 @@
             <div class="mcp-section">
                 <!-- ── Brand / Title ── -->
                 <h1 class="mcp-product-title hidden lg:block">{{ $product->name }}</h1>
-                {{-- <h4 class="text-base text-black leading-none mb-2">Product Description :</h4> --}}
-                {{-- <p class="mcp-description">{{ $product->description }}</p> --}}
                 <!-- ── Price ── -->
                 <div class="mcp-price-row">
                     <span class="text-sm sm:text-base text-black">Price:</span>
@@ -220,13 +218,6 @@
                         <button class="mcp-qty-btn" onclick="mcpChangeQty(1)">+</button>
                     </div>
                     <div class="mcp-action-row">
-                        {{-- <button class="mcp-btn" id="buyNowBtn" data-product="{{ $product->id }}" data-variant="">
-                            Buy Now
-                        </button> --}}
-                        {{-- <button class="mcp-btn mcp-btn-outline" id="addToCartBtn" data-product="{{ $product->id }}"
-                            data-variant="{{ $defaultVariant->id ?? '' }}">
-                            Add to cart
-                        </button> --}}
                         <button class="mcp-btn" id="buyNowBtn">
                             Buy Now
                         </button>
@@ -527,6 +518,13 @@
 
             document.addEventListener('DOMContentLoaded', function() {
 
+                const defaultVariantId = "{{ $defaultVariant->id ?? '' }}";
+
+                if (defaultVariantId) {
+                    document.getElementById('buyNowBtn').dataset.variant = defaultVariantId;
+                    document.getElementById('addToCartBtn').dataset.variant = defaultVariantId;
+                }
+
                 if (HAS_VARIANTS && {{ $defaultVariant ? 'true' : 'false' }}) {
                     document.getElementById('buyNowBtn').dataset.variant = "{{ $defaultVariant->id }}";
                 }
@@ -538,8 +536,15 @@
                         in_stock: {{ $defaultVariant->stock > 0 ? 'true' : 'false' }}
                     });
                 }
-            });
 
+                fetch('/cart/count')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (typeof updateCartBadge === "function") {
+                            updateCartBadge(data.count);
+                        }
+                    });
+            });
 
             // ================= IMAGE SWITCH =================
 
@@ -848,7 +853,8 @@
                     });
             }
 
-            
+            const IS_LOGGED_IN = {{ auth('customer')->check() ? 'true' : 'false' }};
+
             document.getElementById('buyNowBtn').addEventListener('click', function() {
                 Cart.add({
                     productId: PRODUCT_ID,
@@ -877,105 +883,6 @@
                     button: this
                 });
             });
-            // document.getElementById('buyNowBtn').addEventListener('click', function() {
-            //     sendCartRequest(true);
-            // });
-
-            // document.getElementById('addToCartBtn').addEventListener('click', function() {
-            //     sendCartRequest(false);
-            // });
-
-            // const IS_LOGGED_IN = {{ auth('customer')->check() ? 'true' : 'false' }};
-
-            // function sendCartRequest(isBuyNow) {
-
-            //     // 🔒 AUTH CHECK (CORRECT PLACE)
-            //     if (!IS_LOGGED_IN && isBuyNow) {
-            //         window.location.href = "{{ route('customer.login') }}";
-            //         return;
-            //     }
-
-            //     const btn = isBuyNow ?
-            //         document.getElementById('buyNowBtn') :
-            //         document.getElementById('addToCartBtn');
-
-            //     const productId = PRODUCT_ID;
-            //     const variantId = btn.dataset.variant || null;
-            //     const qty = mcpQty;
-
-            //     // validation
-            //     if (HAS_VARIANTS) {
-            //         const totalAttributes = document.querySelectorAll('.variant-group').length;
-            //         const selectedCount = Object.keys(selectedValues).length;
-
-            //         if (selectedCount < totalAttributes) {
-            //             showToast({
-            //                 title: "Warning",
-            //                 message: "Please select all options",
-            //                 type: "warning"
-            //             });
-            //             return;
-            //         }
-            //     }
-
-            //     // 🔥 loading state
-            //     btn.disabled = true;
-            //     const originalText = btn.innerText;
-            //     btn.innerText = "Processing...";
-
-            //     fetch('/cart/add', {
-            //             method: 'POST',
-            //             headers: {
-            //                 'Content-Type': 'application/json',
-            //                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            //             },
-            //             body: JSON.stringify({
-            //                 product_id: productId,
-            //                 variant_id: variantId,
-            //                 qty: qty,
-            //                 buy_now: isBuyNow
-            //             })
-            //         })
-            //         .then(res => {
-            //             if (!res.ok) throw new Error('Network error');
-            //             return res.json();
-            //         })
-            //         .then(data => {
-
-            //             if (!data.success) {
-            //                 showToast({
-            //                     title: "Error",
-            //                     message: (data.message || "Something went wrong"),
-            //                     type: "error"
-            //                 });
-            //                 return;
-            //             }
-
-            //             if (isBuyNow && data.redirect) {
-            //                 window.location.href = data.redirect;
-            //             } else {
-            //                 showToast({
-            //                     title: "Cart",
-            //                     message: "Added to your cart",
-            //                     type: "success"
-            //                 });
-            //                 location.reload();
-            //             }
-
-            //         })
-            //         .catch(err => {
-            //             console.error(err);
-            //             showToast({
-            //                 title: "Error",
-            //                 message: "Something went wrong. Please try again.",
-            //                 type: "error"
-            //             });
-            //         })
-            //         .finally(() => {
-            //             btn.disabled = false;
-            //             btn.innerText = originalText;
-            //         });
-            // }
         </script>
     @endpush
 

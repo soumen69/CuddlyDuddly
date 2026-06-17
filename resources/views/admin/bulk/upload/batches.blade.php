@@ -47,12 +47,12 @@
                                     Review Required
                                 </option>
 
-                                <option value="ready_for_commit" @selected(request('status') == 'ready_for_commit')>
-                                    Ready For Commit
+                                <option value="ready_for_publish" @selected(request('status') == 'ready_for_publish')>
+                                    Ready For Publish
                                 </option>
 
-                                <option value="queued" @selected(request('status') == 'queued')>
-                                    Queued
+                                <option value="publishing" @selected(request('status') == 'publishing')>
+                                    Publishing
                                 </option>
 
                                 <option value="partially_committed" @selected(request('status') == 'partially_committed')>
@@ -63,7 +63,7 @@
                                     Committed
                                 </option>
 
-                                <option value="commit_failed" @selected(request('status') == 'commit_failed')>
+                                <option value="publish_failed" @selected(request('status') == 'publish_failed')>
                                     Commit Failed
                                 </option>
 
@@ -75,7 +75,7 @@
                                     Image Upload In Progress
                                 </option>
 
-                                <option value="image_completed" @selected(request('status') == 'image_completed')>
+                                <option value="completed" @selected(request('status') == 'completed')>
                                     Image Completed
                                 </option>
 
@@ -141,14 +141,14 @@
                                     @php
                                         $statusClass = match ($batch->status) {
                                             'review_required' => 'warning',
-                                            'ready_for_commit' => 'dark',
-                                            'queued' => 'primary',
+                                            'ready_for_publish' => 'dark',
+                                            'publishing' => 'primary',
                                             'partially_committed' => 'info',
                                             'committed' => 'success',
-                                            'commit_failed' => 'danger',
+                                            'publish_failed' => 'danger',
                                             'image_upload_pending' => 'warning',
                                             'image_upload_in_progress' => 'info',
-                                            'image_completed' => 'success',
+                                            'completed' => 'success',
                                             default => 'secondary',
                                         };
                                     @endphp
@@ -208,7 +208,7 @@
                                             </a>
                                         @endif
                                         {{-- COMPLETED --}}
-                                        @if ($batch->status === 'image_completed')
+                                        @if ($batch->status === 'completed')
                                             <span class="badge bg-success px-3 py-2">
                                                 <i class="bi bi-check-circle me-1"></i>
                                                 Completed

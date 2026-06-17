@@ -18,7 +18,7 @@
                             class="w-full h-12 leading-12 max-w-input text-sm sm:text-base leading-none placeholder:text-block placeholder:text-black pointer-events-auto">
                     </div>
 
-                    <a href="#!"
+                    <a href="{{ route('seller.login') }}"
                         class="w-full hidden xl:max-w-52 lg:flex-2 lg:flex justify-center items-center gap-2 btn-wrapper py-3.5 
                         rounded-xxl border border-black/20 cursor-pointer hover:border-transparent hover:bg-black/20!">
                         <img src="{{ asset('storage/WebsiteImages/home/home.png') }}" alt="" class="max-w-icon">

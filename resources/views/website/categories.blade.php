@@ -2,6 +2,11 @@
 
 @section('title', 'Product Categories | CuddlyDuddly')
 @push('styles')
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
     <link rel="stylesheet" href="{{ asset('css/categories.css') }}">
 @endpush
 @section('content')
@@ -47,7 +52,12 @@
 
                         <template x-for="tab in tabs" :key="tab.name">
                             <div x-show="activeTab === tab.name" x-cloak x-transition>
-                                <div class="grid grid-cols-2 lg:grid-cols-3 gap-y-(--margin-sm) gap-3 md:gap-5 addtocart">
+                                <div x-show="loading" x-cloak>
+                                    @include('website.components.plp-skeleton')
+                                </div>
+
+                                <div x-show="!loading" x-cloak
+                                    class="grid grid-cols-2 lg:grid-cols-3 gap-y-(--margin-sm) gap-3 md:gap-5 addtocart">
                                     <template x-for="product in tab.products" :key="product.id">
                                         <div class="flex flex-col product-card">
 
@@ -67,10 +77,10 @@
                                                         x-text="product.price"></span>
                                                 </div>
                                                 <div class="cart-rating"><span class="max-w-icon"><img
-                                                        src="{{ asset('storage/WebsiteImages/staricon.png') }}"
-                                                        alt=""
-                                                        class="max-w-(--max-w-xl) object-contain"></span><span
-                                                    class="cart-span text-white" x-text="product.review"></span></div>
+                                                            src="{{ asset('storage/WebsiteImages/staricon.png') }}"
+                                                            alt=""
+                                                            class="max-w-(--max-w-xl) object-contain"></span><span
+                                                        class="cart-span text-white" x-text="product.review"></span></div>
                                             </div>
                                             <div class="flex flex-wrap gap-2 mt-2" x-show="product.variants_grouped.visual">
                                                 <template x-for="(values, attr) in product.variants_grouped.visual"
@@ -128,13 +138,13 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
         <script src="{{ asset('js/cart.js') }}"></script>
         <script>
+            window.plpRequestId = 0;
             window.tabsData = @json($tabs);
             window.masterSlug = "{{ $master->slug }}";
             window.totalProductsCount = {{ $totalProductsCount }};
@@ -144,6 +154,7 @@
                     tabs: window.tabsData || [],
                     activeTab: '',
                     loading: false,
+                    requestId: 0,
                     updateCounter(count) {
                         const el = document.getElementById('result-range');
                         if (el) {
@@ -161,26 +172,46 @@
                     },
 
                     async loadProducts(tab) {
+
+                        const currentRequest = ++this.requestId;
+
                         this.activeTab = tab.name;
-                        const url = `/category/${window.masterSlug}/${tab.sectionSlug}/${tab.slug}/products`;
                         this.loading = true;
+
                         try {
+
+                            const url =
+                                `/category/${window.masterSlug}/${tab.sectionSlug}/${tab.slug}/products`;
+
                             const response = await fetch(url);
-                            if (!response.ok) throw new Error("Network error");
+
+                            if (!response.ok) {
+                                throw new Error('Network error');
+                            }
+
                             const data = await response.json();
+
+                            if (currentRequest !== this.requestId) {
+                                return;
+                            }
+
                             tab.products = data.products || [];
+
                             this.updateCounter(tab.products.length);
 
-                            const container = document.getElementById('filters-container');
-                            const popup = document.getElementById('filterpopup');
+                            const container =
+                                document.getElementById('filters-container');
 
+                            const popup =
+                                document.getElementById('filterpopup');
                             if (container && popup) {
-                                // inject filters (even if empty)
-                                container.innerHTML = data.filtersHtml || '';
-
-                                const hasProducts = tab.products && tab.products.length > 0;
-                                const hasFilters = data.filtersHtml && data.filtersHtml.trim() !== '';
-                                // 🔥 FINAL LOGIC
+                                container.innerHTML =
+                                    data.filtersHtml || '';
+                                const hasProducts =
+                                    tab.products.length > 0;
+                                const hasFilters =
+                                    data.filtersHtml &&
+                                    data.filtersHtml.trim() !== '';
                                 if (hasProducts && hasFilters) {
                                     popup.style.display = 'block';
                                     openInitialDropdowns();
@@ -189,9 +220,12 @@
                                 }
                             }
                         } catch (err) {
-                            console.error("Tab load error:", err);
+                            console.error(err);
+                        } finally {
+                            if (currentRequest === this.requestId) {
+                                this.loading = false;
+                            }
                         }
-                        this.loading = false;
                     }
                 }
             }
@@ -242,6 +276,166 @@
                     button: btn
                 });
             });
+            document.addEventListener('change', async function(e) {
+
+                if (!e.target.classList.contains('ajax-filter')) {
+                    return;
+                }
+
+                const tabComponent = Alpine.closestDataStack(
+                    document.querySelector('[x-data="tabsComponent()"]')
+                )[0];
+
+                const tab = tabComponent.tabs.find(
+                    t => t.name === tabComponent.activeTab
+                );
+
+                if (!tab) return;
+
+                const currentRequest = ++window.plpRequestId;
+
+                tabComponent.loading = true;
+
+                try {
+
+                    const filters = {};
+
+                    document
+                        .querySelectorAll('.ajax-filter:checked')
+                        .forEach(input => {
+
+                            const attribute =
+                                input.dataset.attribute;
+
+                            if (!filters[attribute]) {
+                                filters[attribute] = [];
+                            }
+
+                            filters[attribute].push(input.value);
+                        });
+
+                    const params = new URLSearchParams();
+
+                    Object.entries(filters).forEach(
+                        ([attribute, values]) => {
+
+                            values.forEach(value => {
+
+                                params.append(
+                                    `filters[${attribute}][]`,
+                                    value
+                                );
+
+                            });
+
+                        }
+                    );
+
+                    const url =
+                        `/category/${window.masterSlug}/${tab.sectionSlug}/${tab.slug}/products?` +
+                        params.toString();
+
+                    const response = await fetch(url);
+
+                    const data = await response.json();
+
+                    if (currentRequest !== window.plpRequestId) {
+                        return;
+                    }
+
+                    tab.products =
+                        data.products || [];
+
+                    tabComponent.updateCounter(
+                        tab.products.length
+                    );
+
+                    const container =
+                        document.getElementById('filters-container');
+
+                    if (container) {
+
+                        container.innerHTML =
+                            data.filtersHtml || '';
+
+                        openInitialDropdowns();
+                    }
+
+                } catch (err) {
+
+                    console.error(err);
+
+                } finally {
+
+                    if (
+                        currentRequest === window.plpRequestId
+                    ) {
+                        tabComponent.loading = false;
+                    }
+                }
+            });
+            // document.addEventListener('change', async function(e) {
+
+            //     if (!e.target.classList.contains('ajax-filter')) {
+            //         return;
+            //     }
+
+            //     const activeTab = Alpine.evaluate(
+            //         document.querySelector('[x-data="tabsComponent()"]'),
+            //         'activeTab'
+            //     );
+
+            //     const tabComponent = Alpine.closestDataStack(
+            //         document.querySelector('[x-data="tabsComponent()"]')
+            //     )[0];
+
+            //     const tab = tabComponent.tabs.find(
+            //         t => t.name === tabComponent.activeTab
+            //     );
+
+            //     if (!tab) return;
+
+            //     const filters = {};
+
+            //     document.querySelectorAll('.ajax-filter:checked')
+            //         .forEach(input => {
+
+            //             const attribute = input.dataset.attribute;
+
+            //             if (!filters[attribute]) {
+            //                 filters[attribute] = [];
+            //             }
+
+            //             filters[attribute].push(input.value);
+            //         });
+
+            //     const params = new URLSearchParams();
+
+            //     Object.entries(filters).forEach(([attribute, values]) => {
+            //         values.forEach(value => {
+            //             params.append(`filters[${attribute}][]`, value);
+            //         });
+            //     });
+
+            //     const url =
+            //         `/category/${window.masterSlug}/${tab.sectionSlug}/${tab.slug}/products?` +
+            //         params.toString();
+
+            //     const response = await fetch(url);
+
+            //     const data = await response.json();
+
+            //     tab.products = data.products || [];
+
+            //     const container = document.getElementById('filters-container');
+
+            //     if (container) {
+            //         container.innerHTML = data.filtersHtml || '';
+            //         openInitialDropdowns();
+            //     }
+
+            //     tabComponent.updateCounter(tab.products.length);
+            // });
         </script>
     @endpush
 @endsection

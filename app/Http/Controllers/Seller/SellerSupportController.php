@@ -7,11 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SupportTicket;
 use App\Models\TicketReply;
-use App\Models\Sellers;
 
 class SellerSupportController extends Controller
 {
-    public function index(Request $request, Sellers $seller)
+    public function index(Request $request, \App\Models\Sellers $seller)
     {
         // Security check: Ensure the logged-in seller is accessing their own slug
         if (Auth::guard('seller')->id() !== $seller->id) {
@@ -28,7 +27,7 @@ class SellerSupportController extends Controller
         return view('seller.supports.index', compact('seller', 'ticket'));
     }
 
-    public function sendReply(Request $request, Sellers $seller)
+    public function sendReply(Request $request, \App\Models\Sellers $seller)
     {
         // Security check
         if (Auth::guard('seller')->id() !== $seller->id) {
@@ -67,7 +66,7 @@ class SellerSupportController extends Controller
     }
 
     // ============= Long Polling =============
-    public function poll(Request $request, Sellers $seller, $ticketId)
+    public function poll(Request $request, \App\Models\Sellers $seller, $ticketId)
     {
         // Security check
         if (Auth::guard('seller')->id() !== $seller->id) {

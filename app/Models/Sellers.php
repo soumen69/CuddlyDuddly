@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\HasRoles;
 use \Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Sanctum\HasApiTokens;
 
 class Sellers extends Authenticatable
 {
@@ -16,30 +17,17 @@ class Sellers extends Authenticatable
     protected $table = 'sellers';
 
     protected $fillable = [
-        'name',
+        'auth_id',
         'slug',
+        'name',
         'contact_person',
         'email',
-        'password',
         'phone',
-        'address',
-        'city',
-        'state',
-        'country',
-        'postal_code',
-        'gst_number',
-        'pan_number',
-        'bank_account_number',
-        'bank_name',
-        'ifsc_code',
-        'upi_id',
         'compliance_status',
-        'bank_verified',
         'logo',
-        'documents',
         'commission_rate',
         'is_active',
-        'password'
+        'is_onboard',
     ];
 
     /**
@@ -63,12 +51,12 @@ class Sellers extends Authenticatable
         });
     }
 
-    protected $hidden = ['password', 'remember_token'];
+    // protected $hidden = ['password', 'remember_token'];
 
-    protected $casts = [
-        'documents' => 'array',
-        'is_active' => 'boolean',
-    ];
+    // protected $casts = [
+    //     'documents' => 'array',
+    //     'is_active' => 'boolean',
+    // ];
 
 
     public function products()
@@ -110,4 +98,30 @@ class Sellers extends Authenticatable
     {
         return $this->permissions()->whereIn('slug', $slugs)->isNotEmpty();
     }
+
+    public function businessDetail()
+    {
+        return $this->hasOne(SellerBusinessDetail::class, 'seller_id');
+    }
+
+    public function address()
+    {
+        return $this->hasOne(SellerAddress::class, 'seller_id');
+    }
+
+    public function pickupAddress()
+    {
+        return $this->hasOne(SellerPickupAddress::class, 'seller_id');
+    }
+
+    public function bankDetail()
+    {
+        return $this->hasOne(SellerBankDetail::class, 'seller_id');
+    }
+
+    public function supplierDetail()
+    {
+        return $this->hasOne(SellerSupplierDetail::class, 'seller_id');
+    }
+
 }

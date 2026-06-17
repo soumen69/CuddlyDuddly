@@ -60,7 +60,7 @@
                             <div class="alert alert-danger">{{ session('error') }}</div>
                         @endif
 
-                        <form method="POST" action="{{ route('registration-otp.verify') }}">
+                        <form method="POST" action="{{ route('seller.registration-otp.verify') }}">
                             @csrf
 
                             <div class="cd-field-group">
@@ -96,7 +96,7 @@
     </div>
     <div id="cd-otp-toast" class="cd-toast"></div>
     <script>
-        window.cdRegistrationOtpResendUrl = "{{ route('registration-otp.resend') }}";
+        window.cdRegistrationOtpResendUrl = "{{ route('seller.registration-otp.resend') }}";
         window.cdRegistrationOtpToastId = "cd-otp-toast";
         document.addEventListener("DOMContentLoaded", () => {
             if (typeof cdStartCountdown === "function") cdStartCountdown();

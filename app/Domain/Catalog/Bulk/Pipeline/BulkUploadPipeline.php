@@ -72,6 +72,7 @@ class BulkUploadPipeline
             $family['product']['seller_id'] = $sellerId;
         }
 
+
         $validationErrors = array_merge(
 
             $compiled['errors'] ?? [],
@@ -88,13 +89,6 @@ class BulkUploadPipeline
             $validationErrors
         );
 
-        // if (empty($validationErrors)) {
-
-        //     CommitBulkBatchJob::dispatch(
-        //         $batchId
-        //     );
-        // }
-
         return [
 
             'batch_id' => $batchId,
@@ -107,7 +101,7 @@ class BulkUploadPipeline
 
             'status' =>
             empty($validationErrors)
-                ? 'queued'
+                ? 'publishing'
                 : 'review_required',
         ];
     }

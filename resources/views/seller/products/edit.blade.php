@@ -5,6 +5,9 @@
 @section('content')
 
     @push('styles')
+        {{-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"> --}}
+
         <link href="{{ asset('css/product-form.css') }}" rel="stylesheet">
 
         <style>
@@ -63,15 +66,13 @@
                     </div>
                 </div>
 
-                <form id="productForm"
-                    action="{{ route('seller.products.update', [$seller->slug, $product->id]) }}"
+                <form id="productForm" action="{{ route('seller.products.update', [$seller->slug, $product->id]) }}"
                     method="POST" enctype="multipart/form-data" novalidate>
                     @csrf
                     @method('PUT')
                     <input type="hidden" name="product_action" id="productAction" value="publish">
 
                     <div class="bg-white rounded-lg border border-black/10 overflow-hidden w-full">
-
                         <!-- SECTION: Basic Information -->
                         @include('seller.products.basicInformation')
 
@@ -80,6 +81,7 @@
 
                         <!-- Product Details (Images & Description) -->
                         @include('seller.products.productDetails')
+
                     </div>
                     <div class="flex justify-between items-center pt-8 pb-4 px-6 gap-4">
                         <a href="{{ route('seller.products.index', $seller->slug) }}"
@@ -87,11 +89,11 @@
                             Cancel
                         </a>
                         <div class="flex gap-3 sm:gap-4">
-                            <button type="button"
+                            {{-- <button type="button"
                                 onclick="document.getElementById('productAction').value='draft'; document.getElementById('productForm').requestSubmit();"
                                 class="px-3.5 py-2 sm:px-8 sm:py-3 cursor-pointer bg-gray-100 text-sm sm:text-base text-black font-medium rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap">
                                 Save Draft
-                            </button>
+                            </button> --}}
 
                             <button type="button"
                                 onclick="document.getElementById('productAction').value='publish'; document.getElementById('productForm').requestSubmit();"
@@ -175,10 +177,9 @@
             window.existingVisualImages = @json($sellerExistingVisualImages);
             window.attributeUrlTemplate = "{{ route('product-categories.attributes', ':id') }}";
         </script>
-        <script src="{{ asset('js/seller-add-product.js') }}?v={{ time() }}"></script>
+        {{-- <script src="{{ asset('js/seller-add-product.js') }}?v={{ time() }}"></script> --}}
         <script src="{{ asset('js/seller-product-edit.js') }}?v={{ time() }}"></script>
     @endpush
 
 
 @endsection
-

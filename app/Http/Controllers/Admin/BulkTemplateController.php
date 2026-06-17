@@ -14,7 +14,6 @@ class BulkTemplateController extends Controller
     public function showWizard()
     {
         // Temporary test page
-        return view('admin.bulk.template_wizard');
     }
 
     public function generateTemplate(BulkTemplateGenerateRequest $request)

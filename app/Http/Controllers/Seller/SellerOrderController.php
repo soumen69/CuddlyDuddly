@@ -12,6 +12,31 @@ use App\Models\Sellers;
 
 class SellerOrderController extends Controller
 {
+    private function sellerItemsQuery(Sellers $seller)
+    {
+        return Order::with([
+            'user',
+            'shippingAddress',
+            'items' => function ($q) use ($seller) {
+                $q->whereHas('product', function ($p) use ($seller) {
+                    $p->where('seller_id', $seller->id);
+                })->with(['product.categorySections.category', 'product.seller']);
+            }
+        ])
+            ->whereHas('items.product', function ($q) use ($seller) {
+                $q->where('seller_id', $seller->id);
+            });
+    }
+    private function sellerReturnsQuery(Sellers $seller)
+    {
+        return Returns::with([
+            'order',
+            'orderItem.product.categorySections.category',
+            'orderItem.product.seller',
+        ])->whereHas('orderItem.product', function ($q) use ($seller) {
+            $q->where('seller_id', $seller->id);
+        });
+    }
 
     public function index(Request $request, Sellers $seller)
     {
@@ -36,10 +61,7 @@ class SellerOrderController extends Controller
         */
 
         if ($activeTab === 'orders' || $activeTab === 'cancellation') {
-            $itemsQuery = OrderItem::with(['order.user', 'order.shippingAddress', 'product.categorySections.category'])
-                ->whereHas('product', function ($q) use ($seller) {
-                    $q->where('seller_id', $seller->id);
-                });
+            $itemsQuery = $this->sellerItemsQuery($seller);
 
             // Filter by active tab status (Status is usually on the Order table)
             if ($activeTab === 'cancellation') {
@@ -76,13 +98,7 @@ class SellerOrderController extends Controller
                 $cancellation = $itemsQuery->latest()->paginate(20)->withQueryString();
             }
         } elseif ($activeTab === 'return') {
-            $returnsQuery = Returns::with([
-                'order',
-                'orderItem.product'
-            ])
-                ->whereHas('orderItem.product', function ($q) use ($seller) {
-                    $q->where('seller_id', $seller->id);
-                });
+            $returnsQuery = $this->sellerReturnsQuery($seller);
 
             // Search for Returns
             if ($search) {
@@ -100,6 +116,7 @@ class SellerOrderController extends Controller
             $returns = $returnsQuery->latest()->paginate(20)->withQueryString();
         }
 
+        // dd($orders, $returns, $cancellation);
         /*
         |--------------------------------------------------------------------------
         | AJAX RESPONSE
@@ -116,7 +133,6 @@ class SellerOrderController extends Controller
                 ))->render()
             ]);
         }
-
         /*
         |--------------------------------------------------------------------------
         | NORMAL VIEW
@@ -140,7 +156,7 @@ class SellerOrderController extends Controller
         }
 
         // Load order only if it includes this seller’s products
-        $order = Order::with(['user', 'shippingAddress', 'items.product'])
+        $order = Order::with(['user', 'shippingAddress', 'items.product.seller'])
             ->whereHas('items.product', function ($q) use ($seller) {
                 $q->where('seller_id', $seller->id);
             })
@@ -148,7 +164,7 @@ class SellerOrderController extends Controller
 
         // Filter only this seller’s items for display
         $sellerItems = $order->items->filter(function ($item) use ($seller) {
-            return $item->product->seller_id == $seller->id;
+            return (int) optional($item->product)->seller_id === (int) $seller->id;
         });
 
         return view('seller.orders.show', compact('order', 'sellerItems', 'seller'));
@@ -161,7 +177,9 @@ class SellerOrderController extends Controller
             abort(403);
         }
 
-        $order = Order::where('seller_id', $seller->id)->findOrFail($id);
+        $order = Order::whereHas('items.product', function ($q) use ($seller) {
+            $q->where('seller_id', $seller->id);
+        })->findOrFail($id);
 
         $request->validate([
             'status' => 'required|string',
@@ -170,5 +188,10 @@ class SellerOrderController extends Controller
         $order->update(['status' => $request->status]);
 
         return redirect()->route('seller.orders.index', $seller->slug)->with('success', 'Order updated successfully.');
+    }
+
+    public function viewAction(Request $request)
+    {
+        return view('seller.orders.show');
     }
 }

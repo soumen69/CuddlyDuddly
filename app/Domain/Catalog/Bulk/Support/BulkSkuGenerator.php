@@ -16,21 +16,6 @@ class BulkSkuGenerator
         return 'PSKU-' . strtoupper(Str::random(8));
     }
 
-    // public function variantSku(string $productName, array $variantLabels): string
-    // {
-    //     $prefix = collect(explode(' ', $productName))
-    //         ->map(fn($w) => strtoupper(substr($w, 0, 1)))
-    //         ->implode('');
-
-    //     $variantCode = collect($variantLabels)
-    //         ->map(fn($v) => strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $v), 0, 3)))
-    //         ->implode('-');
-
-    //     return "{$prefix}-{$variantCode}";
-    // }
-
-
-
     public function variantSku(string $productCode, array $variantLabels): string
     {
         $variantCode = collect($variantLabels)

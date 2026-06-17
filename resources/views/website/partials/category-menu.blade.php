@@ -142,7 +142,7 @@
                                             {{-- 🔒 SECTION BLOCK (UNBREAKABLE) --}}
                                             <li>
                                                 <h4>{{ $section['name'] }}</h4>
-                                                <ul>
+                                            </li>
                                                     @foreach ($section['categories'] as $category)
                                                         <li>
                                                             <a href="{{ route('category.show', [
@@ -155,7 +155,6 @@
                                                             </a>
                                                         </li>
                                                     @endforeach
-                                                </ul>
                                             </li>
                                         @endforeach
 

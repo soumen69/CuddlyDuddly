@@ -19,7 +19,7 @@
                                     <input type="checkbox" name="filters[{{ $filter['attribute_id'] }}][]"
                                         id="filter_{{ $filter['attribute_id'] }}_{{ $value->id }}"
                                         value="{{ $value->id }}" data-attribute="{{ $filter['attribute_id'] }}"
-                                        class="ajax-filter">
+                                        class="ajax-filter" @checked(in_array($value->id, request()->input("filters.{$filter['attribute_id']}", [])))>
 
                                     <label for="filter_{{ $filter['attribute_id'] }}_{{ $value->id }}">
                                         {{ $value->value }}
@@ -29,7 +29,6 @@
                                             </span>
                                         @endif
                                     </label>
-
                                 </li>
                             @endforeach
                         @endif

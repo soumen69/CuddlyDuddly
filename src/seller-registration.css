@@ -1,0 +1,515 @@
+@import "tailwindcss";
+
+.cd-page {
+    @apply min-h-screen;
+}
+
+/* ── Header ── */
+.cd-header {
+    @apply flex justify-center items-center py-10 md:pt-16 lg:pt-20 md:pb-10;
+}
+
+/* ── Card ── */
+.cd-card {
+    @apply bg-white rounded-3xl border border-black/20 overflow-hidden flex w-full;
+}
+
+/* ── Image Pane ── */
+.cd-image-pane {
+    @apply hidden md:block w-[37%] flex-shrink-0 overflow-hidden bg-gray-200 h-[570px] md:h-[630px];
+}
+
+.cd-image {
+    @apply w-full h-full object-cover object-top;
+}
+
+/* ── Form Pane ── */
+.cd-form-pane {
+    @apply flex-1 flex flex-col justify-center px-4 sm:px-8 py-8 md:py-10 lg:py-14 md:px-12 lg:px-16;
+}
+
+/* ── Heading ── */
+.cd-heading {
+    @apply text-2xl lg:text-3xl font-bold text-black leading-tight mb-1.5;
+}
+
+.cd-subheading {
+    @apply text-sm text-neutral-500 mb-5;
+}
+
+/* ── Mobile Input Label ── */
+.cd-input-label {
+    @apply block text-sm font-medium text-black mb-2.5;
+}
+
+/* ── Phone Input ── */
+.cd-phone-wrap {
+    @apply flex items-stretch border border-[#E0E0E0] rounded-full overflow-hidden h-14 py-2.5 pr-2.5 bg-white transition-all duration-200 mb-6;
+
+}
+
+.cd-phone-prefix {
+    @apply flex items-center px-2.5 sm:px-5 text-sm font-normal text-[rgba(75,74,74,0.55)] border-r border-[#E0E0E0] bg-white select-none flex-shrink-0;
+}
+
+.cd-phone-input {
+    @apply w-full flex-1 px-5 text-sm text-neutral-500 placeholder:text-[rgba(75,74,74,0.55)] bg-transparent border-none outline-none;
+}
+
+/* ── Terms Row ── */
+.cd-terms-row {
+    @apply flex items-start gap-2.5 cursor-pointer mb-6;
+}
+
+.cd-checkbox {
+    @apply w-6 h-6 rounded-full border border-[#e0e0e0] cursor-pointer block transition-all duration-150;
+}
+
+/* .cd-checkbox:checked {
+    @apply ;
+} */
+.cd-terms-row input {
+    padding: 0;
+    height: initial;
+    width: initial;
+    margin-bottom: 0;
+    display: none;
+    cursor: pointer;
+}
+
+.cd-terms-text {
+    @apply relative cursor-pointer text-sm text-neutral-500 font-normal pl-8;
+}
+
+.cd-terms-row label a {
+    @apply text-[var(--color-pink-transparent)] hover:underline;
+}
+
+#cd-send-otp-btn i,
+#cd-login-btn i {
+    @apply text-sm;
+}
+
+.mcp-btn:not(:disabled):hover {
+    @apply bg-black text-white;
+}
+
+button:disabled {
+    @apply opacity-50 cursor-not-allowed;
+}
+
+.cd-terms-row label:before {
+    content: '';
+    -webkit-appearance: none;
+    background-color: transparent;
+    border: 1.5px solid rgba(0, 0, 0, 0.621);
+    border-radius: 100%;
+    padding: 10px;
+    display: inline-block;
+    vertical-align: middle;
+    cursor: pointer;
+    height: 20px;
+    width: 20px;
+    position: absolute;
+    left: 0;
+}
+
+.cd-terms-row input:checked+label::before {
+    background-color: var(--color-pink-transparent);
+    border-color: var(--color-pink-transparent);
+}
+
+.cd-terms-row input:checked+label:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 3px;
+    left: 7px;
+    width: 6px;
+    height: 12px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.cd-checkbox:checked::after {
+    content: '';
+    @apply absolute;
+    left: 5px;
+    top: 1.5px;
+    width: 6px;
+    height: 10px;
+    border: 2.5px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+}
+
+/* ── Toast ── */
+.cd-toast {
+    @apply hidden mt-4 px-4 py-2.5 rounded-xl text-sm font-bold text-center;
+}
+
+.cd-toast--success {
+    @apply !block bg-green-50 text-green-700;
+}
+
+.cd-toast--error {
+    @apply !block bg-red-50 text-red-600;
+}
+
+
+/* ══════════════════════════════
+       OTP SCREEN SPECIFIC STYLES
+    ══════════════════════════════ */
+
+/* Screen panels */
+.cd-screen {
+    @apply w-full;
+}
+
+/* Plain CSS — not @apply hidden — so it cannot be overridden by other @apply rules */
+.cd-screen--hidden {
+    display: none !important;
+}
+
+/* Success screen: flex layout only when visible (not hidden) */
+.cd-screen-success-inner {
+    @apply w-full flex flex-col items-center justify-center text-center;
+}
+
+/* OTP input group */
+.cd-otp-group {
+    @apply flex items-center gap-2 sm:gap-2.5 md:gap-3 mb-4;
+}
+
+.cd-otp-box {
+    @apply w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full border border-[#E0E0E0] text-center text-base md:text-lg font-semibold text-gray-900 outline-none bg-white transition-all duration-150 caret-transparent;
+}
+
+.cd-otp-box:focus {
+    border-color: var(--color-pink-transparent);
+    box-shadow: 0 0 0 3px rgba(232, 23, 74, 0.09);
+}
+
+.cd-otp-box--filled {
+    border-color: var(--color-pink-transparent);
+    background-color: #fff1f4;
+}
+
+/* Resend row */
+.cd-resend-row {
+    @apply flex items-center mb-6;
+}
+
+.cd-resend-btn {
+    @apply text-sm font-semibold hidden cursor-pointer border-0 bg-transparent p-0;
+    color: var(--color-pink-transparent);
+}
+
+.cd-resend-btn--visible {
+    @apply !block;
+}
+
+.cd-resend-btn:hover {
+    @apply underline;
+}
+
+/* Back link */
+.cd-back-link {
+    @apply flex items-center gap-1.5 text-sm text-neutral-500 cursor-pointer mb-6 w-fit hover:text-gray-800 transition-colors duration-150;
+}
+
+.cd-back-link i {
+    @apply text-xs;
+}
+
+/* ══════════════════════════════
+       SUCCESS SCREEN STYLES
+    ══════════════════════════════ */
+
+/* Badge icon + heading side by side */
+.cd-success-title-row {
+    @apply flex flex-col sm:flex-row items-center justify-center gap-4 mb-6;
+}
+
+.cd-success-title-row .cd-heading {
+    @apply m-0;
+}
+
+.cd-screen-success-inner .cd-subheading {
+    @apply mb-6;
+}
+
+.cd-success-badge {
+    @apply flex-shrink-0 max-w-14;
+    animation: cd-pop-in 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes cd-pop-in {
+    0% {
+        transform: scale(0.4);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+
+
+.cd-success-redirect-btn {
+    @apply cursor-pointer border-0 mb-5;
+    animation: cd-fade-up 0.4s ease 0.55s both;
+}
+
+.cd-success-redirect-btn:active {
+    @apply scale-[0.985];
+}
+
+.cd-success-secure-text {
+    @apply text-xs text-neutral-400 font-normal w-full;
+    animation: cd-fade-up 0.4s ease 0.65s both;
+}
+
+@keyframes cd-fade-up {
+    0% {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+.cd-screen--hidden {
+    display: none !important;
+}
+
+.cd-registration-detail .cd-image-pane {
+    @apply h-auto
+}
+
+/* ══════════════════════════════════
+       STEPPER
+    ══════════════════════════════════ */
+
+.cd-stepper {
+    @apply flex items-center mb-9 md:mb-14 flex-shrink-0;
+}
+
+.cd-step-circle {
+    @apply w-9 h-9 xl:w-12 xl:h-12 rounded-full flex items-center justify-center text-base sm:text-lg xl:text-2xl font-medium text-black bg-[rgba(243,243,243,0.71)] transition-all duration-300 flex-shrink-0;
+}
+
+.cd-step-circle--active {
+    @apply border-0 text-white bg-[var(--color-pink-transparent)] shadow-[0px_1px_10px_0px_#ED4D4D];
+}
+
+.cd-step-circle--done {
+    @apply bg-[var(--color-pink-transparent)] text-white;
+}
+
+.cd-step-line {
+    @apply flex-1 h-px bg-gray-300 mx-2 min-w-5 xl:min-w-7;
+}
+
+.cd-step-line--done {
+    background-color: var(--color-pink-transparent);
+}
+
+/* ══════════════════════════════════
+       SECTION HEADINGS
+    ══════════════════════════════════ */
+
+.cd-section-title {
+    @apply text-xl font-bold text-gray-900 mb-5;
+}
+
+.cd-section-subtitle {
+    @apply text-lg font-bold text-gray-900 mt-5 mb-4;
+}
+
+.cd-registration-detail .cd-heading {
+    @apply mb-6;
+}
+
+.cd-registration-detail .cd-form-pane {
+    @apply py-10;
+}
+
+/* ══════════════════════════════════
+       FORM FIELDS  — all reusable
+    ══════════════════════════════════ */
+
+.cd-field-group {
+    @apply mb-6 w-full;
+}
+
+.cd-field-label {
+    @apply block text-sm font-medium text-black mb-2.5;
+}
+
+.cd-field-label .cd-required {
+    @apply text-[var(--color-pink-transparent)];
+}
+
+/* Standard text / email input */
+.cd-input {
+    @apply w-full h-12 px-4 text-sm text-black bg-white border border-[#E0E0E0] rounded-full outline-none transition-all duration-200 placeholder:text-[rgba(75,74,74,0.55)];
+}
+
+.cd-input:focus {
+    @apply border! border-[rgba(234,24,73,.35)] shadow-[0px_0px_00px_3px_rgba(232,23,74,0.15)];
+}
+
+/* Select */
+.cd-select {
+    @apply w-full h-12 px-4 text-sm text-black bg-white border border-[#E0E0E0] rounded-full outline-none transition-all 
+    duration-200 cursor-pointer bg-no-repeat bg-[right_18px_center] pr-11
+    bg-[url("data:image/svg+xml,%3Csvg_xmlns='http://www.w3.org/2000/svg'_width='12'_height='12'_viewBox='0_0_24_24'_fill='none'_stroke='%236b7280'_stroke-width='2.5'_stroke-linecap='round'_stroke-linejoin='round'%3E%3Cpolyline_points='6_9_12_15_18_9'/%3E%3C/svg%3E")];
+}
+
+.cd-select option[disabled] {
+    @apply text-[rgba(75,74,74,0.55)];
+}
+
+.cd-select:focus {
+    @apply border! border-[rgba(234,24,73,.35)] shadow-[0px_0px_00px_3px_rgba(232,23,74,0.15)];
+}
+
+/* Two-column grid */
+.cd-field-row {
+    @apply grid grid-cols-2 gap-4;
+}
+
+.cd-registration-detail .cd-field-row {
+    @apply grid-cols-1 md:grid-cols-2 gap-0 md:gap-4;
+}
+
+/* Phone prefix input */
+.cd-phone-wrap {
+    @apply flex items-stretch border border-[#E0E0E0] rounded-full overflow-hidden h-12 bg-white transition-all duration-200;
+}
+
+.cd-phone-wrap:focus-within {
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 3px rgba(232, 23, 74, 0.08);
+}
+
+.cd-phone-prefix {
+    @apply flex items-center px-4 text-sm font-normal text-gray-400 border-r border-[#E0E0E0] select-none flex-shrink-0;
+}
+
+.cd-phone-input {
+    @apply flex-1 px-4 text-sm text-gray-800 bg-transparent border-none outline-none placeholder:text-gray-400;
+}
+
+/* ══════════════════════════════════
+       GST TOGGLE  — pill toggle pair
+       Exact design: two separate pill
+       buttons side-by-side, active one
+       gets brand-red fill + white text,
+       inactive gets light-gray bg
+    ══════════════════════════════════ */
+
+.cd-gst-toggle-row {
+    @apply flex items-center gap-3 mb-4;
+}
+
+/* Hide the native radio */
+.cd-gst-radio {
+    display: none;
+}
+
+.cd-gst-pill-label {
+    @apply flex items-center gap-2 h-10 w-20 pl-2.5 rounded-full text-xs font-normal cursor-pointer select-none transition-all duration-200 border border-black/20 bg-white text-black;
+}
+
+/* The coloured dot inside the pill */
+.cd-gst-pill-label::before {
+    content: '';
+    @apply w-6 h-6 rounded-full bg-[#E5E5E5] flex-shrink-0 transition-all duration-200;
+}
+
+/* When radio is checked → active pill */
+/* .cd-gst-radio:checked+.cd-gst-pill-label {
+    @apply  border-0;
+    background-color: var(--color-brand);
+} */
+
+.cd-gst-radio:checked+.cd-gst-pill-label::before {
+    @apply bg-[var(--color-pink-transparent)];
+}
+
+/* ══════════════════════════════════
+       CAPTCHA ROW
+    ══════════════════════════════════ */
+
+.cd-captcha-row {
+    @apply flex items-center gap-3 mb-4 flex-col min-[430px]:flex-row;
+}
+
+.cd-captcha-btn {
+    @apply min-[430px]:flex-1 h-12 w-full min-[430px]:w-auto rounded-full text-white text-sm font-semibold flex items-center 
+    justify-center gap-2 cursor-pointer border-0 transition-all duration-150 bg-[#4285f4];
+}
+
+.cd-captcha-btn:hover {
+    @apply bg-[#3367d6];
+}
+
+.cd-captcha-logo {
+    @apply w-auto h-auto flex-shrink-0 rounded-md overflow-hidden;
+}
+
+/* BUTTONS------*/
+
+
+.mcp-btn:active:not(:disabled) {
+    @apply scale-[0.985];
+}
+
+.mcp-btn i {
+    @apply text-sm;
+}
+
+.mcp-btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+}
+
+.cd-back-text-link {
+    @apply mx-auto block text-center text-sm font-medium text-black underline cursor-pointer mt-5 hover:text-[var(--color-pink-transparent)] transition-colors duration-150 bg-transparent border-0 flex-shrink-0;
+}
+
+/* ══════════════════════════════════
+       BANK SECURE NOTE
+    ══════════════════════════════════ */
+.cd-secure-note {
+    @apply text-xs text-[rgba(75,74,74,0.55)] text-center mb-4;
+}
+
+/* ══════════════════════════════════
+       TOAST
+    ══════════════════════════════════ */
+
+.cd-toast {
+    @apply px-4 py-2.5 rounded-xl text-sm font-bold text-center mt-3 flex-shrink-0;
+    display: none;
+}
+
+.cd-toast--success {
+    display: block !important;
+    @apply bg-green-50 text-green-700;
+}
+
+.cd-toast--error {
+    display: block !important;
+    @apply bg-red-50 text-red-600;
+}

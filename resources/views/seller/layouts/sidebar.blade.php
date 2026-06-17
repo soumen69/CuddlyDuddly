@@ -104,6 +104,8 @@
                 'seller.add.products',
                 'seller.products.edit',
                 'seller.products.variants.create',
+                'seller.products.bulk.create',
+                'seller.products.create',
             ],
         ],
         [

@@ -53,7 +53,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex gap-4 max-w-full overflow-x-auto mt-5 md:mt-0">
+                            <div class="flex gap-1.5 max-w-full overflow-x-auto mt-5 md:mt-0">
                                 <button type="button"
                                     class="tab-btn listblock-title  mb-0 flex-none py-1.5 px-2.5 border border-b-0 border-black/20 rounded-t-sm {{ request('active_tab', 'orders') == 'orders' ? 'bg-black text-white' : 'bg-transparent text-black' }} cursor-pointer"
                                     data-tab="orders">My

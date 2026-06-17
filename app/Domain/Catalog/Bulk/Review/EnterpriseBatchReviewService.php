@@ -94,8 +94,8 @@ class EnterpriseBatchReviewService
                 ]);
 
             app(
-                BatchStatusSynchronizer::class
-            )->sync(
+                BatchWorkflowManager::class
+            )->syncReviewState(
                 $product->batch_id
             );
         });
@@ -146,8 +146,8 @@ class EnterpriseBatchReviewService
         ]);
 
         app(
-            BatchStatusSynchronizer::class
-        )->sync(
+            BatchWorkflowManager::class
+        )->syncReviewState(
             $product->batch_id
         );
     }

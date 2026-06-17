@@ -3,26 +3,37 @@
     {{-- ================= ORDERS TAB ================= --}}
     <div class="tab-panel {{ $activeTab == 'orders' ? '' : 'hidden' }}" data-tab="orders">
         <div class="overflow-x-auto w-full p-0">
-            <table class="table-auto w-full seller-table">
+            <table class="table-auto w-full sm:w-full seller-table">
                 <thead>
                     <tr class="border-b border-black/20">
-                        <th class="pl-5">Serial No</th>
-                        <th class="table-p-name">Order ID</th>
+                        <th>Serial No</th>
+                        <th>Order ID</th>
                         <th>Product</th>
                         <th>Price</th>
                         <th>Payment Status</th>
-                        <th class="min-w-20 w-[10%]">Actions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    @forelse($orders as $item)
-                        @php $order = $item->order; @endphp
+                    @forelse($orders as $order)
                         <tr class="border-b">
                             <td class="pl-5">{{ $loop->iteration }}</td>
-                            <td class="table-p-name">{{ $order->order_number ?? 'N/A' }}</td>
-                            <td>{{ $item->product?->name ?? 'N/A' }}</td>
-                            <td>₹{{ number_format($item->subtotal, 2) }}</td>
+                            <td>{{ $order->order_number ?? 'N/A' }}</td>
+
+                            <td>
+                                @foreach ($order->items as $item)
+                                    @if ($item->product?->seller_id == $seller->id)
+                                        <div>
+                                            {{ $item->product->name }} (x{{ $item->quantity }})
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </td>
+
+                            <td>
+                                ₹{{ number_format($order->items->where('product.seller_id', $seller->id)->sum('subtotal'), 2) }}
+                            </td>
                             @php
                                 $paymentStatus = $order->payment_status ?? 'pending';
                                 if ($paymentStatus == 'paid') {
@@ -39,7 +50,7 @@
 
                             <td><span class="{{ $statusClass }}">{{ $statusText }}</span></td>
 
-                            <td class="min-w-20 w-[10%]">
+                            <td>
                                 <a href="{{ route('seller.orders.show', [$seller->slug, $order->id]) }}"
                                     class="popup cursor-pointer">
                                     <i class="fa-solid fa-eye"></i>
@@ -54,7 +65,7 @@
                 </tbody>
             </table>
 
-            @if(method_exists($orders, 'hasPages') && $orders->hasPages())
+            @if (method_exists($orders, 'hasPages') && $orders->hasPages())
                 <div class="mt-4 px-4" id="pagination-links">
                     {{ $orders->links() }}
                 </div>
@@ -101,7 +112,7 @@
                 </tbody>
             </table>
 
-            @if(method_exists($returns, 'hasPages') && $returns->hasPages())
+            @if (method_exists($returns, 'hasPages') && $returns->hasPages())
                 <div class="mt-4 px-4" id="pagination-links">
                     {{ $returns->links() }}
                 </div>
@@ -124,12 +135,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($cancellation as $item)
-                        @php $order = $item->order; @endphp
+                    @forelse($cancellation as $order)
                         <tr class="border-b">
                             <td class="pl-5">{{ $order->order_number ?? 'N/A' }}</td>
-                            <td>{{ $item->product?->name ?? 'N/A' }}</td>
-                            <td>₹{{ number_format($item->subtotal, 2) }}</td>
+
+                            <td>
+                                @foreach ($order->items as $item)
+                                    @if ($item->product?->seller_id == $seller->id)
+                                        <div>
+                                            {{ $item->product->name }} (x{{ $item->quantity }})
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </td>
+
+                            <td>
+                                ₹{{ number_format($order->items->where('product.seller_id', $seller->id)->sum('subtotal'), 2) }}
+                            </td>
                             <td>{{ ucfirst($order->payment_status ?? 'N/A') }}</td>
                             <td><span class="cancelled">Cancelled</span></td>
                             <td>
@@ -147,7 +169,7 @@
                 </tbody>
             </table>
 
-            @if(method_exists($cancellation, 'hasPages') && $cancellation->hasPages())
+            @if (method_exists($cancellation, 'hasPages') && $cancellation->hasPages())
                 <div class="mt-4 px-4" id="pagination-links">
                     {{ $cancellation->links() }}
                 </div>

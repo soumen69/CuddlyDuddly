@@ -178,13 +178,7 @@ class PagesController extends Controller
                 $category->product_categories_id, // classified
                 $currentChain->id                 // exact hierarchy row
             );
-        // $filters = app(CategoryFilterService::class)
-        //     ->getFilters(
-        //         $category->id, // ✅ CORRECT
-        //         $currentChain->id
-        //     );
 
-        // var_dump($filters);exit;
         return view('website.categories', compact(
             'master',
             'sectionType',
@@ -196,7 +190,10 @@ class PagesController extends Controller
         ));
     }
 
-    public function loadTabProducts(MasterCategory $master, SectionType $section, Category $category)
+
+
+
+    public function loadTabProducts(Request $request, MasterCategory $master, SectionType $section, Category $category)
     {
         $chain = MasterCategorySection::findByHierarchy(
             $master->id,
@@ -204,17 +201,48 @@ class PagesController extends Controller
             $category->id
         );
 
-        $products = Products::query()
+        $selectedFilters = $request->input('filters', []);
+
+        $query = Products::query()
             ->whereHas('categorySections', function ($q) use ($chain) {
                 $q->where('master_category_section_id', $chain->id);
             })
             ->approvedAndFeatured()
-            ->where('status', 1)
+            ->where('status', 1);
+
+        foreach ($selectedFilters as $attributeId => $valueIds) {
+
+            if (empty($valueIds)) {
+                continue;
+            }
+
+            $query->where(function ($q) use ($attributeId, $valueIds) {
+
+                $q->whereHas(
+                    'attributeValues.attributeValue',
+                    function ($sub) use ($attributeId, $valueIds) {
+                        $sub->where('attribute_id', $attributeId)
+                            ->whereIn('id', $valueIds);
+                    }
+                )
+
+                    ->orWhereHas(
+                        'variants.attributeValues.attributeValue',
+                        function ($sub) use ($attributeId, $valueIds) {
+                            $sub->where('attribute_id', $attributeId)
+                                ->whereIn('id', $valueIds);
+                        }
+                    );
+            });
+        }
+
+        $products = $query
             ->withAvg('reviews', 'rating')
             ->with([
                 'primaryImage',
                 'variants.attributeValues.attributeValue.attribute'
-            ])->get()
+            ])
+            ->get()
             ->map(function ($product) {
 
                 // 🔥 pick variant image
@@ -294,15 +322,16 @@ class PagesController extends Controller
             })
             ->values();
 
-
-        // SAME logic as show() method
         $filters = app(CategoryFilterService::class)
             ->getFilters(
                 $category->product_categories_id,
                 $chain->id
             );
 
-        $filtersHtml = view('website.partials.category-filters', compact('filters'))->render();
+        $filtersHtml = view(
+            'website.partials.category-filters',
+            compact('filters')
+        )->render();
 
         return response()->json([
             'products' => $products,
@@ -538,7 +567,6 @@ class PagesController extends Controller
             'relatedProductsFormatted'
         ));
     }
-
 
     public function checkPincode(Request $request, ShiprocketService $shiprocket)
     {

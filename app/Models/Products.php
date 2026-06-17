@@ -107,8 +107,8 @@ class Products extends Model
     // 🔍 Scopes
     public function scopeApprovedAndFeatured($query)
     {
-        return $query->where('is_approved', 1)
-            ->where('featured', 1)
+        return $query
+            ->where('is_approved', 1)
             ->where('status', 1);
     }
 

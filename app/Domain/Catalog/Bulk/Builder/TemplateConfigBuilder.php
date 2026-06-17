@@ -35,8 +35,6 @@ class TemplateConfigBuilder
 
         $requiredMatrix = $this->buildRequiredMatrix($union);
 
-        // $categorySubMap = $this->buildSubcategoryMap($categories);
-
         $categorySubMap = $this->buildSubcategoryMap(
             $categories,
             $subcategories

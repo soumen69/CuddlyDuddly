@@ -7,7 +7,8 @@
         @include('seller.layouts.header')
         <div class="w-full flex flex-col sm:flex-row justify-between pt-6 px-6 pb-4 md:pl-14 md:pr-9 sm:pb-10">
             <div class="mb-4 sm:mb-0">
-                <h3 class="font-sans font-normal text-lg md:text-xl lg:text-2xl xl:text-3xl leading-tight tracking-1 text-black">
+                <h3
+                    class="font-sans font-normal text-lg md:text-xl lg:text-2xl xl:text-3xl leading-tight tracking-1 text-black">
                     @php $seller = Auth::guard('seller')->user(); @endphp
                     @if ($seller)
                         <span class="me-3">Hello, {{ $seller->contact_person }}</span>
@@ -17,9 +18,31 @@
                     store moving!</p>
             </div>
             @if ($seller)
-                <a href="{{ route('seller.products.create', $seller->slug) }}" class="seller-btn">
-                    Add Products 
-                </a>
+                {{-- <a href="{{ route('seller.products.index', $seller->slug) }}" class="seller-btn">
+                    Add Products
+                </a> --}}
+                <div class="relative inline-block text-left">
+                    <button type="button" id="productDropdownBtn" class="seller-btn">
+                        Add Products
+                        <i class="fa-solid fa-chevron-down ml-2"></i>
+                    </button>
+
+                    <div id="productDropdownMenu"
+                        class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+
+                        <a href="{{ route('seller.check.bank.details', ['seller' => $seller->slug, 'type' => 'single']) }}"
+                            class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
+                            Single Product
+                        </a>
+                        
+                        <a href="{{ $hasBulkActivity
+                            ? route('seller.bulk.dashboard', ['seller' => $seller->slug])
+                            : route('seller.bulk.template.builder', ['seller' => $seller->slug]) }}"
+                            class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
+                            Bulk Upload
+                        </a>
+                    </div>
+                </div>
             @endif
 
         </div>
@@ -44,19 +67,19 @@
                             class=""></span>
                 </div>
                 <p class="dashboard-title">My orders</p>
-                <span class="dashboard-count">{{$totalOrders}}</span>
+                <span class="dashboard-count">{{ $totalOrders }}</span>
                 <p class="dashboard-detail">+3.5% than last month</p>
 
             </a>
             <a href="#!" class="dashboard-card bg-[#ECFBF2]">
                 <div class="flex justify-between items-center dashboard-card-header">
-                    <span class="dashboard-icon"><img src="{{asset('storage/images/dashboardicon3.png')}}" alt=""
+                    <span class="dashboard-icon"><img src="{{ asset('storage/images/dashboardicon3.png') }}" alt=""
                             class=""></span>
-                    <span class="dashboard-link"><img src="{{asset('storage/images/dashboardarrow.png')}}" alt=""
+                    <span class="dashboard-link"><img src="{{ asset('storage/images/dashboardarrow.png') }}" alt=""
                             class=""></span>
                 </div>
                 <p class="dashboard-title">My earnings</p>
-                <span class="dashboard-count">{{$totalEarning}}</span>
+                <span class="dashboard-count">{{ $totalEarning }}</span>
                 <p class="dashboard-detail">+3.5% than last month</p>
             </a>
         </div>
@@ -65,8 +88,9 @@
             <div class="rounded-[10px] border border-black/20 bg-white">
                 <div class="flex-box p-5 justify-between border-b border-black/20">
                     <span class="dashboard-title">Recent Transactions</span>
-                    <button type="button" class="cursor-pointer"><img src="{{asset('storage/images/dashboard-popup.png')}}"
-                            alt="" class="max-h-9"></button>
+                    <button type="button" class="cursor-pointer"><img
+                            src="{{ asset('storage/images/dashboard-popup.png') }}" alt=""
+                            class="max-h-9"></button>
                 </div>
                 <ul class="dashboard-list overflow-x-scroll sm:overflow-x-hidden px-5 pt-5 pb-9">
                     <li class="flex justify-between items-center gap-x-4 sm:gap-x-10 md:gap-x-0">
@@ -142,7 +166,8 @@
                     </div>
                     <div id="tab2" class="tab-item hidden">
                         <canvas id="myChart" height="0"
-                            style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+                            style="display: block; box-sizing: border-box; height: 0px; width: 0px;"
+                            width="0"></canvas>
 
                     </div>
                     <div id="tab3" class="tab-item hidden">Lorem ipsum dolor sit amet, consectetur
@@ -162,7 +187,7 @@
                         </h6>
                         <button type="button"
                             class="flex justify-center items-center gap-2 border border-black/20 rounded-[5px] px-2.5 py-2 cursor-pointer font-sans font-medium text-sm leading-tight tracking-1 text-[var(--color-silver)] hover:bg-black hover:text-white transition-all duration-300"><img
-                                src="{{asset('storage/images/dashboard-filter.png')}}" alt=""
+                                src="{{ asset('storage/images/dashboard-filter.png') }}" alt=""
                                 class="max-w-[15px] object-contain"><span>Filter</span></button>
                     </div>
                     <div class="overflow-x-auto w-full p-0">
@@ -191,13 +216,13 @@
                                                 $status = strtolower($item->order->order_status ?? 'processing');
                                             @endphp
 
-                                            <span class="
-                                                    @if($status === 'delivered') deliver-btn
+                                            <span
+                                                class="
+                                                    @if ($status === 'delivered') deliver-btn
                                                     @elseif($status === 'shipped') shipped
                                                     @elseif($status === 'cancelled') cancelled
                                                     @elseif(in_array($status, ['processing', 'pending'])) processing
-                                                    @elseif($status === 'refund') refund
-                                                    @endif">
+                                                    @elseif($status === 'refund') refund @endif">
                                                 {{ ucfirst($status) }}
                                             </span>
 
@@ -225,3 +250,26 @@
     </div>
 
 @endsection
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const btn = document.getElementById('productDropdownBtn');
+            const menu = document.getElementById('productDropdownMenu');
+
+            if (btn && menu) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    menu.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+@endpush

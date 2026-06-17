@@ -44,7 +44,7 @@
                     <!-- Right: Form -->
                     <div id="cd-form-pane" class="cd-form-pane">
                         <form id="cd-seller-registration-form" method="POST"
-                            action="{{ route('business-details.register') }}">
+                            action="{{ route('seller.business-details.register') }}">
                             @csrf
                             <!-- ════ STEPPER (always visible) ════ -->
                             <div class="cd-stepper">
@@ -53,8 +53,6 @@
                                 <div class="cd-step-circle" id="cd-step-2">2</div>
                                 <div class="cd-step-line" id="cd-line-23"></div>
                                 <div class="cd-step-circle" id="cd-step-3">3</div>
-                                <div class="cd-step-line" id="cd-line-34"></div>
-                                <div class="cd-step-circle" id="cd-step-4">4</div>
                             </div>
 
                             <!-- ═══════════════════════════════════════
@@ -95,39 +93,13 @@
                                     </select>
                                 </div>
 
-                                <!-- GST Toggle -->
-                                <div class="cd-field-group">
-                                    <label class="cd-field-label">I have GST number</label>
-                                    <div class="cd-gst-toggle-row">
-                                        <!-- Yes pill -->
-                                        <input type="radio" id="cd-gst-yes" name="gst_available" class="cd-gst-radio"
-                                            value="yes" checked onchange="cdGstToggle('yes')" />
-                                        <label for="cd-gst-yes" class="cd-gst-pill-label">Yes</label>
-
-                                        <!-- No pill -->
-                                        <input type="radio" id="cd-gst-no" name="gst_available"
-                                            class="cd-gst-radio" value="no" onchange="cdGstToggle('no')" />
-                                        <label for="cd-gst-no" class="cd-gst-pill-label">No</label>
-                                    </div>
-                                </div>
-
-                                <!-- GST Number — visible only when Yes is selected -->
-                                <div class="cd-field-group" id="cd-gst-field">
-                                    <label class="cd-field-label" for="cd-gst-number">
-                                        GST Number <span class="cd-required">*</span>
-                                    </label>
-                                    <input id="cd-gst-number" class="cd-input" name="gst_number" type="text"
-                                        maxlength="15" placeholder="Enter 15-digit GSTIN"
-                                        oninput="this.value=this.value.toUpperCase()" />
-                                </div>
 
                                 <div id="cd-toast-1a" class="cd-toast"></div>
 
                                 <button type="button" class="mcp-btn w-full mt-2" onclick="cdSub1aContinue()">
                                     Continue <i class="fas fa-arrow-right"></i>
                                 </button>
-                                <button type="button" class="cd-back-text-link"
-                                    onclick="history.back()">Back</button>
+                                <button type="button" class="cd-back-text-link" onclick="history.back()">Back</button>
 
                             </div>
                             <!-- /sub-1a -->
@@ -163,7 +135,8 @@
                                         Email Address <span class="cd-required">*</span>
                                     </label>
                                     <input id="cd-email" class="cd-input" name="email" type="email"
-                                        placeholder="your@email@example.com" />
+                                        placeholder="your@email@example.com"
+                                        value="{{ ($sellerLoginType ?? '') === 'email' ? $sellerLogin : '' }}" />
                                 </div>
 
                                 <h2 class="cd-heading">Address Details</h2>
@@ -322,6 +295,7 @@
                                             <span class="cd-phone-prefix">+91</span>
                                             <input id="cd-contact-mobile" name="contact_mobile"
                                                 class="cd-phone-input" type="tel" maxlength="10"
+                                                value="{{ ($sellerLoginType ?? '') === 'mobile' ? $sellerLoginMobile ?? '' : '' }}"
                                                 oninput="this.value=this.value.replace(/\D/g,'')" />
                                         </div>
                                     </div>
@@ -347,85 +321,10 @@
                             </div>
                             <!-- /sub-2 -->
 
-
                             <!-- ═══════════════════════════════════════
-               STEP 3 — Bank Details
+               STEP 3 — Supplier Details
           ═══════════════════════════════════════ -->
                             <div id="cd-sub-3" class="cd-screen--hidden">
-
-                                <h2 class="cd-heading">Bank Details</h2>
-
-                                <div class="cd-field-group">
-                                    <label class="cd-field-label" for="cd-account-holder">
-                                        Account Holder Name <span class="cd-required">*</span>
-                                    </label>
-                                    <input id="cd-account-holder" name="account_holder_name" class="cd-input"
-                                        type="text" placeholder="As per bank records" />
-                                </div>
-
-                                <div class="cd-field-group">
-                                    <label class="cd-field-label" for="cd-bank-name">
-                                        Bank Name <span class="cd-required">*</span>
-                                    </label>
-                                    <select id="cd-bank-name" name="bank_name" class="cd-select">
-                                        <option value="" disabled selected>Select your bank</option>
-                                        <option>State Bank of India</option>
-                                        <option>HDFC Bank</option>
-                                        <option>ICICI Bank</option>
-                                        <option>Axis Bank</option>
-                                        <option>Kotak Mahindra Bank</option>
-                                        <option>Punjab National Bank</option>
-                                        <option>Bank of Baroda</option>
-                                        <option>Canara Bank</option>
-                                        <option>IndusInd Bank</option>
-                                        <option>Yes Bank</option>
-                                        <option>Other</option>
-                                    </select>
-                                </div>
-
-                                <div class="cd-field-group">
-                                    <label class="cd-field-label" for="cd-acc-num">
-                                        Account Number <span class="cd-required">*</span>
-                                    </label>
-                                    <input id="cd-acc-num" class="cd-input" name="account_number" type="password"
-                                        placeholder="Enter account number" />
-                                </div>
-
-                                <div class="cd-field-group">
-                                    <label class="cd-field-label" for="cd-acc-num-confirm">
-                                        Confirm Account Number <span class="cd-required">*</span>
-                                    </label>
-                                    <input id="cd-acc-num-confirm" class="cd-input" name="confirm_account_number"
-                                        type="text" placeholder="Enter account number" />
-                                </div>
-
-                                <div class="cd-field-group">
-                                    <label class="cd-field-label" for="cd-ifsc">
-                                        IFSC Code <span class="cd-required">*</span>
-                                    </label>
-                                    <input id="cd-ifsc" name="ifsc_code" class="cd-input" type="text"
-                                        maxlength="11" placeholder="Enter 11-character IFSC code"
-                                        oninput="this.value=this.value.toUpperCase()" />
-                                </div>
-
-                                <p class="cd-secure-note">our bank details are encrypted and secure</p>
-
-                                <div id="cd-toast-3" class="cd-toast"></div>
-
-                                <button type="button" class="mcp-btn w-full mt-2" onclick="cdStep3Continue()">
-                                    Continue <i class="fas fa-arrow-right"></i>
-                                </button>
-                                <button type="button" class="cd-back-text-link"
-                                    onclick="cdShowSub('2')">Back</button>
-
-                            </div>
-                            <!-- /sub-3 -->
-
-
-                            <!-- ═══════════════════════════════════════
-               STEP 4 — Supplier Details
-          ═══════════════════════════════════════ -->
-                            <div id="cd-sub-4" class="cd-screen--hidden">
 
                                 <h2 class="cd-heading">Supplier Details</h2>
 
@@ -450,7 +349,7 @@
                                                 <option value="{{ $section->id }}"
                                                     {{ in_array((string) $section->id, array_map('strval', $selectedCategories)) ? 'selected' : '' }}>
                                                     {{ $section->name ?? '' }}
-                                                 </option>
+                                                </option>
                                             @endforeach
                                         @endif
                                     </select>
@@ -461,7 +360,7 @@
 
 
 
-                                
+
                                 <h2 class="cd-heading">Business Capacity</h2>
 
                                 <div class="cd-field-group">
@@ -492,13 +391,13 @@
                                     </select>
                                 </div>
 
-                                <div id="cd-toast-4" class="cd-toast"></div>
+                                <div id="cd-toast-3" class="cd-toast"></div>
 
                                 <button type="submit" class="mcp-btn w-full">
                                     Continue &amp; Send OTP <i class="fas fa-arrow-right"></i>
                                 </button>
                                 <button type="button" class="cd-back-text-link"
-                                    onclick="cdShowSub('3')">Back</button>
+                                    onclick="cdShowSub('2')">Back</button>
                             </div>
                     </div>
                     </form>
@@ -513,7 +412,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        window.cdPincodeLookupUrl = "{{ route('pincode.lookup', ['pin' => '__PIN__']) }}";
+        window.cdPincodeLookupUrl = "{{ route('seller.pincode.lookup', ['pin' => '__PIN__']) }}";
     </script>
     <script src="{{ asset('js/seller-registration.js') }}"></script>
     <script>

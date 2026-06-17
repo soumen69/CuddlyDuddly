@@ -7,7 +7,7 @@
     <p class="cart-text">{{ $product['name'] }}</p>
 
     @if (!empty($product['subtitle']))
-        <span class="cart-span">{{ $product['subtitle'] }}</span>
+    <span class="cart-span">{{ $product['subtitle'] }}</span>
     @endif
 
     <div class="cart-rating">
@@ -19,16 +19,19 @@
 
     <div class="flex-box justify-start items-end gap-3">
         @if (!empty($product['mrp']))
-            <span class="cart-price line-through decoration-1">
-                ₹{{ number_format($product['mrp']) }}
-            </span>
+        <span class="cart-price line-through decoration-1">
+            ₹{{ number_format($product['mrp']) }}
+        </span>
         @endif
         <span class="cart-discount">
             ₹{{ number_format($product['price']) }}
         </span>
     </div>
 
-    <button id="addToCartBtn" class="mcp-btn mcp-btn-outline mt-5">
-        <span class="">Add to cart</span>
-    </button>
+    <!-- <button class="mcp-btn mcp-btn-outline mt-5"> -->
+    <a href="{{ $product['url'] }}" class="mcp-btn mcp-btn-outline mt-5 text-center">
+        View Product
+    </a>
+    <span class="">Add to cart</span>
+    <!-- </button> -->
 </div>

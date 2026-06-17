@@ -10,6 +10,7 @@ use App\Models\ProductAttributeValue;
 use App\Models\VariantAttributeValue;
 
 use App\Domain\Catalog\Bulk\Support\BulkSkuGenerator;
+use App\Domain\Catalog\Navigation\Jobs\GenerateBatchNavigationPlacementsJob;
 
 class BulkCommitEngine
 {
@@ -21,18 +22,11 @@ class BulkCommitEngine
         $this->sku = $sku;
     }
 
-    public function commitBatch(
-        int $batchId
-    ): void {
-
-        $products = DB::table(
-            'ingestion_products'
-        )
-
+    public function commitBatch(int $batchId): void
+    {
+        $products = DB::table('ingestion_products')
             ->where('batch_id', $batchId)
-
             ->where('status', 'approved')
-
             ->get();
 
         foreach ($products as $staged) {
@@ -63,13 +57,9 @@ class BulkCommitEngine
             });
         }
 
-
-        DB::table('ingestion_batches')
-            ->where('id', $batchId)
-            ->update([
-                'status' => 'image_upload_pending',
-                'updated_at' => now(),
-            ]);
+        GenerateBatchNavigationPlacementsJob::dispatch(
+            $batchId
+        );
     }
 
     protected function commitProductFamily(

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Seller\ProductImportController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Seller\SellerAdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\{
@@ -32,15 +32,15 @@ use App\Http\Controllers\Admin\{
     ShippingLogController,
     ShippingController,
     TrashController,
-    BulkTemplateController,
-    BulkUploadController,
-    BulkImageController
 };
 use App\Http\Controllers\Seller\{
     SellerDashboardController,
     SellerOrderController,
     SellerProductController,
     SellerSupportController,
+    BulkUploadController,
+    BulkImageController,
+    SellerBulkDashboardController
 };
 use App\Http\Controllers\Website\{
     PagesController,
@@ -131,6 +131,27 @@ Route::post('/admin/logout', [AdminController::class, 'logout'])->name('admin.lo
 Route::post('/seller/logout', [AdminController::class, 'logout'])->name('seller.logout');
 
 
+
+Route::middleware('auth:admin')->group(function () {
+    Route::get('/admin/notifications', [NotificationController::class, 'adminNotifications']);
+});
+
+Route::middleware('auth:seller')->group(function () {
+    Route::get('/seller/notifications', [NotificationController::class, 'sellerNotifications']);
+    Route::get('/seller/notifications/{notification}', [NotificationController::class, 'showSellerNotification'])
+        ->name('seller.notifications.show');
+});
+
+Route::middleware('auth:customer')->group(function () {
+    Route::get('/customer/notifications', [NotificationController::class, 'customerNotifications']);
+});
+
+
+
+
+
+
+
 /*
 |--------------------------------------------------------------------------
 | Admin Panel (Protected by admin.auth)
@@ -151,6 +172,7 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
         Route::patch('/{seller}/toggle-active', [SellerController::class, 'toggleActive'])->name('toggle-active');
         Route::patch('/{seller}/toggle-onboard', [SellerController::class, 'toggleOnboard'])->name('toggle-onboard');
         Route::resource('/', SellerController::class)->parameters(['' => 'seller']);
+        Route::post('/{seller}/delete', [SellerController::class, 'deleteSeller'])->name('delete');
     });
 
     // Payouts
@@ -186,93 +208,93 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
 
 
     //bulk upload
-    Route::get('products/show-bulk-template', [BulkTemplateController::class, 'showWizard'])->name('bulk.showWizard');
-    Route::post('products/get-bulk-template', [BulkTemplateController::class, 'generateTemplate'])->name('admin.generate.template');
-    Route::post('bulk/subcategories', [ProductController::class, 'bulkSubcategories']);
+    // Route::get('products/show-bulk-template', [BulkTemplateController::class, 'showWizard'])->name('bulk.showWizard');
+    // Route::post('products/get-bulk-template', [BulkTemplateController::class, 'generateTemplate'])->name('admin.generate.template');
+    // Route::post('bulk/subcategories', [ProductController::class, 'bulkSubcategories']);
 
 
 
 
-    Route::prefix('admin/bulk')
-        ->name('admin.bulk.')
-        ->group(function () {
+    // Route::prefix('admin/bulk')
+    //     ->name('admin.bulk.')
+    //     ->group(function () {
 
-            Route::get('/upload', [BulkUploadController::class, 'index'])
-                ->name('upload.index');
+    //         Route::get('/upload', [BulkUploadController::class, 'index'])
+    //             ->name('upload.index');
 
-            Route::post('/upload/process', [BulkUploadController::class, 'process'])
-                ->name('upload.process');
+    //         Route::post('/upload/process', [BulkUploadController::class, 'process'])
+    //             ->name('upload.process');
 
-            Route::get('/batches', [BulkUploadController::class, 'batches'])
-                ->name('batches.index');
+    //         Route::get('/batches', [BulkUploadController::class, 'batches'])
+    //             ->name('batches.index');
 
-            Route::get('/batch/{batchId}', [BulkUploadController::class, 'review'])
-                ->name('batch.review');
+    //         Route::get('/batch/{batchId}', [BulkUploadController::class, 'review'])
+    //             ->name('batch.review');
 
-            Route::post('/batch/{productId}/approve', [BulkUploadController::class, 'approve'])
-                ->name('batch.approve');
+    //         Route::post('/batch/{productId}/approve', [BulkUploadController::class, 'approve'])
+    //             ->name('batch.approve');
 
-            Route::post('/batch/{productId}/reject', [BulkUploadController::class, 'reject'])
-                ->name('batch.reject');
+    //         Route::post('/batch/{productId}/reject', [BulkUploadController::class, 'reject'])
+    //             ->name('batch.reject');
 
-            Route::post('/batch/{batchId}/commit', [BulkUploadController::class, 'commit'])
-                ->name('batch.commit');
-        });
+    //         Route::post('/batch/{batchId}/commit', [BulkUploadController::class, 'commit'])
+    //             ->name('batch.commit');
+    //     });
 
-    Route::prefix('admin/bulk/images')
-        ->name('admin.bulk.images.')
-        ->group(function () {
+    // Route::prefix('admin/bulk/images')
+    //     ->name('admin.bulk.images.')
+    //     ->group(function () {
 
-            Route::get(
-                '/product/{productId}/details',
-                [BulkImageController::class, 'productDetails']
-            )->name('product.details');
+    //         Route::get(
+    //             '/product/{productId}/details',
+    //             [BulkImageController::class, 'productDetails']
+    //         )->name('product.details');
 
-            Route::post(
-                '/ajax-upload',
-                [BulkImageController::class, 'ajaxUpload']
-            )->name('ajax.upload');
+    //         Route::post(
+    //             '/ajax-upload',
+    //             [BulkImageController::class, 'ajaxUpload']
+    //         )->name('ajax.upload');
 
-            Route::get(
-                '/{batchId}',
-                [BulkImageController::class, 'gateway']
-            )->name('gateway');
+    //         Route::get(
+    //             '/{batchId}',
+    //             [BulkImageController::class, 'gateway']
+    //         )->name('gateway');
 
-            Route::get(
-                '/{batchId}/zip-template',
-                [BulkImageController::class, 'downloadZipTemplate']
-            )->name('zip.template');
+    //         Route::get(
+    //             '/{batchId}/zip-template',
+    //             [BulkImageController::class, 'downloadZipTemplate']
+    //         )->name('zip.template');
 
-            Route::post(
-                '/{batchId}/zip-upload',
-                [BulkImageController::class, 'uploadZip']
-            )->name('zip.upload');
+    //         Route::post(
+    //             '/{batchId}/zip-upload',
+    //             [BulkImageController::class, 'uploadZip']
+    //         )->name('zip.upload');
 
-            Route::get(
-                '/{batchId}/manual',
-                [BulkImageController::class, 'manual']
-            )->name('manual');
+    //         Route::get(
+    //             '/{batchId}/manual',
+    //             [BulkImageController::class, 'manual']
+    //         )->name('manual');
 
-            Route::post(
-                '/{batchId}/manual-upload',
-                [BulkImageController::class, 'manualUpload']
-            )->name('manual.upload');
+    //         Route::post(
+    //             '/{batchId}/manual-upload',
+    //             [BulkImageController::class, 'manualUpload']
+    //         )->name('manual.upload');
 
-            Route::get(
-                '/{batchId}/review',
-                [BulkImageController::class, 'review']
-            )->name('review');
+    //         Route::get(
+    //             '/{batchId}/review',
+    //             [BulkImageController::class, 'review']
+    //         )->name('review');
 
-            Route::post(
-                '/{batchId}/commit',
-                [BulkImageController::class, 'commitImages']
-            )->name('commit');
+    //         Route::post(
+    //             '/{batchId}/commit',
+    //             [BulkImageController::class, 'commitImages']
+    //         )->name('commit');
 
-            Route::post(
-                '/{batchId}/skip',
-                [BulkImageController::class, 'skipForNow']
-            )->name('skip');
-        });
+    //         Route::post(
+    //             '/{batchId}/skip',
+    //             [BulkImageController::class, 'skipForNow']
+    //         )->name('skip');
+    //     });
 
 
 
@@ -285,6 +307,7 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
 
     // Orders, Returns, Cancellations
     Route::resource('orders', OrderController::class)->names('admin.orders');
+
     Route::get('orders/get-addresses/{id}', [OrderController::class, 'getAddresses']);
     Route::get('orders/{id}/quick-view', [OrderController::class, 'quickView'])->name('quickView');
     Route::resource('returns', ReturnController::class)->names('admin.returns');
@@ -400,6 +423,23 @@ Route::prefix('seller/{seller:slug}')->middleware('seller.auth')->group(function
     Route::get('dashboard', [SellerDashboardController::class, 'index'])->name('seller.dashboard');
     Route::get('products/search', [SellerProductController::class, 'search'])->name('seller.products.search');
     Route::get('add-products', [SellerProductController::class, 'create'])->name('seller.add.products');
+
+    Route::get('/products/bulk-upload', [SellerProductController::class, 'bulkCreate'])->name('seller.products.bulk.create');
+
+    Route::post('/products/bulk-upload', [SellerProductController::class, 'bulkStore'])->name('seller.products.bulk.store');
+
+    Route::post('/products/update-price/{id}', [SellerProductController::class, 'updatePrice'])->name('seller.products.update-price');
+
+    Route::post('/products/update-stock/{id}', [SellerProductController::class, 'updateStock'])->name('seller.products.update-stock');
+
+    Route::post('/products/variant/toggle-featured/{id}', [SellerProductController::class, 'toggleFeatured'])->name('seller.products.toggle-featured');
+
+    Route::get('/check-bank-details/{type}', [SellerProductController::class, 'checkBankDetails'])->name('seller.check.bank.details');
+
+    Route::get('/bank-details/{type}', [SellerProductController::class, 'showBankDetailsForm'])->name('seller.bank.details.form');
+
+    Route::post('bank-details/{type}', [SellerProductController::class, 'storeBankDetails'])->name('seller.bank.details.store');
+
     Route::resource('orders', SellerOrderController::class)->names('seller.orders');
     Route::post('ckeditor-image-upload', [SellerProductController::class, 'ckeditorImageUpload'])->name('seller.ckeditor-image-upload');
     Route::resource('products', SellerProductController::class)->names('seller.products');
@@ -409,7 +449,136 @@ Route::prefix('seller/{seller:slug}')->middleware('seller.auth')->group(function
     Route::get('support', [SellerSupportController::class, 'index'])->name('seller.support.index');
     Route::get('support/poll/{ticket}', [SellerSupportController::class, 'poll'])->name('seller.support.poll');
     Route::post('support/reply', [SellerSupportController::class, 'sendReply'])->name('seller.support.reply');
+    Route::get('notifications', [NotificationController::class, 'sellerNotifications'])->name('seller.notifications');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllSellerRead'])->name('seller.notifications.mark-all-read');
+
+
+
+    Route::get(
+        '/bulk',
+        [SellerBulkDashboardController::class, 'index']
+    )->name('seller.bulk.dashboard');
+
+    Route::prefix('bulk/template')
+        ->name('seller.bulk.template.')
+        ->group(function () {
+
+            // TEMPLATE BUILDER PAGE
+            Route::get(
+                '/',
+                [SellerBulkDashboardController::class, 'showWizard']
+            )->name('builder');
+
+            // GENERATE TEMPLATE
+            Route::post(
+                '/generate',
+                [SellerBulkDashboardController::class, 'generateTemplate']
+            )->name('generate');
+        });
+
+    Route::post(
+        'bulk/subcategories',
+        [SellerProductController::class, 'bulkSubcategories']
+    )->name('seller.bulk.subcategories');
+
+    Route::prefix('bulk')
+        ->name('seller.bulk.')
+        ->group(function () {
+
+            Route::get(
+                '/upload',
+                [BulkUploadController::class, 'index']
+            )->name('upload.index');
+
+            Route::post(
+                '/upload/process',
+                [BulkUploadController::class, 'process']
+            )->name('upload.process');
+
+            Route::get(
+                '/batches',
+                [BulkUploadController::class, 'batches']
+            )->name('batches.index');
+
+            Route::get(
+                '/batch/{batchId}',
+                [BulkUploadController::class, 'review']
+            )->name('batch.review');
+
+            Route::post(
+                '/batch/{productId}/approve',
+                [BulkUploadController::class, 'approve']
+            )->name('batch.approve');
+            Route::post(
+                '/batch/bulk/bulk-approve',
+                [BulkUploadController::class, 'bulkApprove']
+            )->name('batch.bulk-approve');
+            Route::post(
+                '/batch/{productId}/reject',
+                [BulkUploadController::class, 'reject']
+            )->name('batch.reject');
+
+            Route::post(
+                '/batch/{batchId}/commit',
+                [BulkUploadController::class, 'commit']
+            )->name('batch.commit');
+        });
+
+    Route::prefix('bulk/images')
+        ->name('seller.bulk.images.')
+        ->group(function () {
+            Route::get(
+                '/product/{productId}/details',
+                [BulkImageController::class, 'productDetails']
+            )->name('product.details');
+
+            Route::post(
+                '/ajax-upload',
+                [BulkImageController::class, 'ajaxUpload']
+            )->name('ajax.upload');
+
+            Route::get(
+                '/{batchId}',
+                [BulkImageController::class, 'gateway']
+            )->name('gateway');
+
+            Route::get(
+                '/zip-template/{batchId}',
+                [BulkImageController::class, 'downloadZipTemplate']
+            )->name('zip.template');
+
+            Route::post(
+                '/{batchId}/zip-upload',
+                [BulkImageController::class, 'uploadZip']
+            )->name('zip.upload');
+
+            Route::get(
+                '/{batchId}/manual',
+                [BulkImageController::class, 'manual']
+            )->name('manual');
+
+            Route::post(
+                '/{batchId}/manual-upload',
+                [BulkImageController::class, 'manualUpload']
+            )->name('manual.upload');
+
+            Route::get(
+                '/{batchId}/review',
+                [BulkImageController::class, 'review']
+            )->name('review');
+
+            Route::post(
+                '/{batchId}/commit',
+                [BulkImageController::class, 'commitImages']
+            )->name('commit');
+
+            Route::post(
+                '/{batchId}/skip',
+                [BulkImageController::class, 'skipForNow']
+            )->name('skip');
+        });
 });
+
 
 
 Route::get('product-categories/category-attributes/{category}', [ProductController::class, 'getCategoryAttributes'])->name('product-categories.attributes');

@@ -255,6 +255,7 @@ class BulkImageZipProcessor
         );
     }
 
+
     protected function storeImages(
         int $batchId,
         object $product,
@@ -267,27 +268,32 @@ class BulkImageZipProcessor
         $inserted = 0;
 
         $files = collect(scandir($path))
-
             ->filter(function ($file) use ($path) {
+                if (! is_file($path . '/' . $file)) {
+                    return false;
+                }
 
-                return is_file(
-                    $path . '/' . $file
+                $ext = strtolower(
+                    pathinfo(
+                        $file,
+                        PATHINFO_EXTENSION
+                    )
+                );
+
+                return in_array(
+                    $ext,
+                    $this->allowedExtensions
                 );
             })
-
             ->values();
 
-        if (
-            $files->count() < 4
-        ) {
 
+        if ($files->count() < 4) {
             $errors[] = [
-
                 'product' =>
                 $product->product_code,
-
                 'message' =>
-                'Minimum 4 images required.',
+                'Minimum 4 valid images required.',
             ];
 
             return [
@@ -296,24 +302,43 @@ class BulkImageZipProcessor
             ];
         }
 
-        foreach ($files as $index => $file) {
+        DB::table('ingestion_product_images')
+            ->where('batch_id', $batchId)
+            ->where('product_id', $product->id)
+            ->where('image_type', $type)
+            ->when(
+                $attributeValueId,
+                fn($q) =>
+                $q->where(
+                    'attribute_value_id',
+                    $attributeValueId
+                )
+            )
+            ->delete();
 
+
+        $primaryIndex = 0;
+
+        foreach ($files as $index => $file) {
+            $filenameWithoutExt = pathinfo(
+                $file,
+                PATHINFO_FILENAME
+            );
+            if (
+                trim($filenameWithoutExt) === '1'
+            ) {
+                $primaryIndex = $index;
+                break;
+            }
+        }
+
+        foreach ($files as $index => $file) {
             $ext = strtolower(
                 pathinfo(
                     $file,
                     PATHINFO_EXTENSION
                 )
             );
-
-            if (
-                !in_array(
-                    $ext,
-                    $this->allowedExtensions
-                )
-            ) {
-
-                continue;
-            }
 
             $source =
                 $path . '/' . $file;
@@ -333,44 +358,149 @@ class BulkImageZipProcessor
             DB::table(
                 'ingestion_product_images'
             )->insert([
-
                 'batch_id' => $batchId,
-
                 'product_id' => $product->id,
-
                 'product_code' =>
                 $product->product_code,
-
                 'attribute_value_id' =>
                 $attributeValueId,
-
                 'image_path' => $stored,
-
                 'original_filename' => $file,
-
                 'image_type' => $type,
-
                 'is_primary' =>
-                $index === 0 ? 1 : 0,
-
+                $index === $primaryIndex ? 1 : 0,
                 'sort_order' => $index,
-
                 'status' =>
                 'pending_review',
-
                 'created_at' => now(),
-
                 'updated_at' => now(),
             ]);
-
             $inserted++;
         }
-
         return [
-
             'errors' => $errors,
-
             'inserted' => $inserted,
         ];
     }
+
+
+
+    // protected function storeImages(
+    //     int $batchId,
+    //     object $product,
+    //     ?int $attributeValueId,
+    //     string $type,
+    //     string $path
+    // ): array {
+
+    //     $errors = [];
+    //     $inserted = 0;
+
+    //     $files = collect(scandir($path))
+
+    //         ->filter(function ($file) use ($path) {
+
+    //             return is_file(
+    //                 $path . '/' . $file
+    //             );
+    //         })
+
+    //         ->values();
+
+    //     if (
+    //         $files->count() < 4
+    //     ) {
+
+    //         $errors[] = [
+
+    //             'product' =>
+    //             $product->product_code,
+
+    //             'message' =>
+    //             'Minimum 4 images required.',
+    //         ];
+
+    //         return [
+    //             'errors' => $errors,
+    //             'inserted' => 0,
+    //         ];
+    //     }
+
+    //     foreach ($files as $index => $file) {
+
+    //         $ext = strtolower(
+    //             pathinfo(
+    //                 $file,
+    //                 PATHINFO_EXTENSION
+    //             )
+    //         );
+
+    //         if (
+    //             !in_array(
+    //                 $ext,
+    //                 $this->allowedExtensions
+    //             )
+    //         ) {
+
+    //             continue;
+    //         }
+
+    //         $source =
+    //             $path . '/' . $file;
+
+    //         $stored =
+    //             'bulk-temp/'
+    //             . uniqid()
+    //             . '.'
+    //             . $ext;
+
+    //         Storage::disk('public')
+    //             ->put(
+    //                 $stored,
+    //                 file_get_contents($source)
+    //             );
+
+    //         DB::table(
+    //             'ingestion_product_images'
+    //         )->insert([
+
+    //             'batch_id' => $batchId,
+
+    //             'product_id' => $product->id,
+
+    //             'product_code' =>
+    //             $product->product_code,
+
+    //             'attribute_value_id' =>
+    //             $attributeValueId,
+
+    //             'image_path' => $stored,
+
+    //             'original_filename' => $file,
+
+    //             'image_type' => $type,
+
+    //             'is_primary' =>
+    //             $index === 0 ? 1 : 0,
+
+    //             'sort_order' => $index,
+
+    //             'status' =>
+    //             'pending_review',
+
+    //             'created_at' => now(),
+
+    //             'updated_at' => now(),
+    //         ]);
+
+    //         $inserted++;
+    //     }
+
+    //     return [
+
+    //         'errors' => $errors,
+
+    //         'inserted' => $inserted,
+    //     ];
+    // }
 }

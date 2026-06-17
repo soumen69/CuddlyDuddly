@@ -2,18 +2,12 @@
 
 namespace App\Http\Controllers\Seller;
 
-use App\Http\Controllers\Controller;
-use App\Models\SellerAddress;
-use App\Models\SellerAuth;
-use App\Models\SellerBankDetail;
+use App\Mail\OtpMail;
+use App\Models\Sellers;
 use App\Models\SellerBusinessDetail;
 use App\Models\SellerPickupAddress;
 use App\Models\SellerSupplierDetail;
-use App\Models\Sellers;
-use App\Mail\OtpMail;
 use App\Models\ProductCategory;
-use App\Services\Bank\IfscLookupClient;
-use App\Services\Gst\MasterGstClient;
 use App\Services\Kyc\PanVerifyClient;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
@@ -25,9 +19,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Models\SellerAddress;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\Rule;
+use App\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
+use App\Mail\SellerRegistrationSuccessMail;
+use App\Services\NotificationService;
+use App\Services\NotificationTemplateService;
+
 
 
 class SellerAdminController extends Controller
@@ -136,18 +136,27 @@ class SellerAdminController extends Controller
 
     public function businessDetails(Request $request)
     {
-        if (!$request->session()->has('seller_onboard_auth_id')) {
-            return redirect()->route('login');
+        if (!$request->session()->has('seller_onboard_login')) {
+            return redirect()->route('seller.login');
         }
 
         $categoryTree = ProductCategory::where('status', 1)->get(['id', 'slug', 'name']);
+        $sellerLogin = (string) $request->session()->get('seller_onboard_login', '');
+        $sellerLoginType = filter_var($sellerLogin, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile';
+        $sellerLoginMobile = $sellerLoginType === 'mobile' ? preg_replace('/\D/', '', $sellerLogin) : '';
 
-        return view('seller.selleronboard.seller-registration-details', compact('categoryTree'));
+
+        return view('seller.selleronboard.seller-registration-details', compact(
+            'categoryTree',
+            'sellerLogin',
+            'sellerLoginType',
+            'sellerLoginMobile'
+        ));
     }
 
     public function captcha(Request $request)
     {
-        if (!$request->session()->has('seller_onboard_auth_id')) {
+        if (!$request->session()->has('seller_onboard_login')) {
             return response()->json(['status' => false, 'message' => 'Session expired. Please login again.'], 401);
         }
 
@@ -172,7 +181,7 @@ class SellerAdminController extends Controller
 
     public function captchaVerify(Request $request)
     {
-        if (!$request->session()->has('seller_onboard_auth_id')) {
+        if (!$request->session()->has('seller_onboard_login')) {
             return response()->json(['valid' => false, 'message' => 'Session expired. Please login again.'], 401);
         }
 
@@ -219,9 +228,10 @@ class SellerAdminController extends Controller
         return response()->json(['valid' => true]);
     }
 
+    /*
     public function bankAccountVerify(Request $request)
     {
-        if (!$request->session()->has('seller_onboard_auth_id')) {
+        if (!$request->session()->has('seller_onboard_login')) {
             return response()->json(['valid' => false, 'message' => 'Session expired. Please login again.'], 401);
         }
 
@@ -285,6 +295,7 @@ class SellerAdminController extends Controller
             'provider' => $provider,
         ]);
     }
+    */
 
     public function lookupPincode($pin)
     {
@@ -347,7 +358,6 @@ class SellerAdminController extends Controller
                 'city' => $po['District'],
                 'state' => $po['State'],
             ]);
-
         } catch (\Throwable $e) {
             Log::error('Pincode lookup failed', [
                 'pin' => $pin,
@@ -363,19 +373,29 @@ class SellerAdminController extends Controller
 
     public function businessDetailsRegister(Request $request)
     {
-        if (!$request->session()->has('seller_onboard_auth_id')) {
+        if (!$request->session()->has('seller_onboard_login')) {
             return $request->expectsJson()
                 ? response()->json([
                     'status' => false,
                     'message' => 'Session expired. Please login again.',
-                    'redirect_url' => route('login'),
+                    'redirect_url' => route('seller.login'),
                 ], 401)
-                : redirect()->route('login');
+                : redirect()->route('seller.login');
         }
 
-        $authId = (int) $request->session()->get('seller_onboard_auth_id');
+        $login = (string) $request->session()->get('seller_onboard_login', '');
         $sessionMobile = (string) $request->session()->get('seller_onboard_mobile', '');
-        $existingSellerId = Sellers::query()->where('auth_id', $authId)->value('id');
+        $existingSeller = null;
+        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $existingSeller = Sellers::query()->where('email', $login)->first();
+        } else {
+            $normalizedLogin = preg_replace('/\D/', '', $login);
+            $existingSeller = Sellers::query()
+                ->where('mobile', $normalizedLogin)
+                ->orWhere('mobile', '+91' . $normalizedLogin)
+                ->first();
+        }
+        $existingSellerId = $existingSeller?->id;
 
         $emailRules = ['required', 'email', 'max:255'];
         if (Schema::hasColumn('sellers', 'email')) {
@@ -386,8 +406,6 @@ class SellerAdminController extends Controller
             'legal_business_name' => ['required', 'string', 'max:255'],
             'store_display_name' => ['required', 'string', 'max:150'],
             'business_type' => ['required', 'in:sole,partnership,pvt,llp,other'],
-            'gst_available' => ['required', 'in:yes,no'],
-            'gst_number' => ['required_if:gst_available,yes', 'nullable', 'string', 'size:15', 'regex:/^[0-9A-Z]{15}$/'],
 
             'pan_number' => ['required', 'string', 'size:10', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]$/'],
             'pan_name' => ['required', 'string', 'max:255'],
@@ -409,12 +427,7 @@ class SellerAdminController extends Controller
             'contact_mobile' => ['required', 'digits:10'],
             'alternate_mobile' => ['nullable', 'digits:10'],
 
-            'account_holder_name' => ['required', 'string', 'max:255'],
-            'bank_name' => ['required', 'string', 'max:255'],
-            'account_number' => ['required', 'string', 'max:50', 'same:confirm_account_number'],
-            'confirm_account_number' => ['required', 'string', 'max:50'],
-            'ifsc_code' => ['required', 'string', 'size:11', 'regex:/^[A-Z]{4}0[A-Z0-9]{6}$/'],
-
+            // Bank details step temporarily disabled.
             'product_categories' => ['required', 'array', 'min:1'],
             'product_categories.*' => ['required', 'integer', 'exists:master_category_sections,id'],
             'monthly_order_capacity' => ['required', 'string', 'max:50'],
@@ -425,9 +438,11 @@ class SellerAdminController extends Controller
             'email.unique' => 'This email is already registered. Please use a different email.',
         ]);
 
-        if (Schema::hasColumn('sellers', 'phone') && $sessionMobile !== '') {
+        $contactMobile = preg_replace('/\D/', '', (string) ($validated['contact_mobile'] ?? ''));
+        $sellerMobile = $contactMobile !== '' ? $contactMobile : preg_replace('/\D/', '', $sessionMobile);
+        if (Schema::hasColumn('sellers', 'mobile') && $sellerMobile !== '') {
             $phoneTaken = Sellers::query()
-                ->where('phone', $sessionMobile)
+                ->where('mobile', $sellerMobile)
                 ->when($existingSellerId, fn($q) => $q->where('id', '!=', $existingSellerId))
                 ->exists();
 
@@ -453,54 +468,6 @@ class SellerAdminController extends Controller
                 ]);
             }
 
-            // Bank verification must be completed (sandbox for now).
-            $bankV = $request->session()->get('seller_onboard_bank_verification');
-            if (!is_array($bankV)) {
-                throw ValidationException::withMessages([
-                    'account_number' => ['Please verify bank account details before continuing.'],
-                ]);
-            }
-            $expires = (int) ($bankV['expires_at'] ?? 0);
-            if ($expires < now()->timestamp) {
-                throw ValidationException::withMessages([
-                    'account_number' => ['Bank verification expired. Please verify again.'],
-                ]);
-            }
-            $hash = (string) ($bankV['account_hash'] ?? '');
-            $expectedHash = hash('sha256', $validated['account_number'] . '|' . strtoupper($validated['ifsc_code']));
-            if ($hash === '' || !hash_equals($hash, $expectedHash)) {
-                throw ValidationException::withMessages([
-                    'account_number' => ['Bank verification does not match the entered account/IFSC. Please verify again.'],
-                ]);
-            }
-            $verifiedName = (string) ($bankV['verified_name'] ?? '');
-            if ($verifiedName !== '' && $this->normalizeNameForMatch($verifiedName) !== $this->normalizeNameForMatch($validated['account_holder_name'])) {
-                throw ValidationException::withMessages([
-                    'account_holder_name' => ['Account holder name does not match the verified name.'],
-                ]);
-            }
-
-            // IFSC must be real, and bank name must match IFSC bank unless "Other".
-            $ifscData = (new IfscLookupClient())->lookup($validated['ifsc_code']);
-            if (!empty($ifscData['bank']) && !empty($validated['bank_name'])) {
-                $selected = mb_strtolower(trim((string) $validated['bank_name']));
-                $actual = mb_strtolower(trim((string) $ifscData['bank']));
-                if ($selected !== $actual && $selected !== 'other') {
-                    throw ValidationException::withMessages([
-                        'bank_name' => ['IFSC belongs to ' . $ifscData['bank'] . '. Please select the same bank.'],
-                    ]);
-                }
-            }
-
-            // Optional GST hard check when configured.
-            if ($validated['gst_available'] === 'yes') {
-                $gstClient = new MasterGstClient();
-                if ($gstClient->isConfigured()) {
-                    $gstClient->lookup($validated['gst_number']);
-                }
-            }
-
-            // Optional PAN hard check when configured.
             $panClient = new PanVerifyClient();
             if ($panClient->isConfigured()) {
                 $panData = $panClient->lookup($validated['pan_number']);
@@ -514,16 +481,36 @@ class SellerAdminController extends Controller
                 }
             }
 
-            $seller = DB::transaction(function () use ($authId, $sessionMobile, $validated) {
-                $seller = Sellers::query()->firstOrNew(['auth_id' => $authId]);
-
-                if ($seller->exists && (int) $seller->is_active === 1) {
-                    return $seller;
+            $seller = DB::transaction(function () use ($login, $sellerMobile, $validated) {
+                if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+                    $seller = Sellers::query()->firstOrNew(['email' => $login]);
+                } else {
+                    $normalizedLogin = preg_replace('/\D/', '', $login);
+                    $seller = Sellers::query()->firstOrNew(['mobile' => $normalizedLogin]);
                 }
+
+                if (Schema::hasColumn('sellers', 'email')) {
+                    $seller->email = (string) ($validated['email'] ?? $login);
+                }
+                if (Schema::hasColumn('sellers', 'mobile') && $sellerMobile !== '') {
+                    $seller->mobile = $sellerMobile;
+                }
+                if (Schema::hasColumn('sellers', 'name')) {
+                    $seller->name = (string) ($validated['store_display_name'] ?? '');
+                }
+                if (Schema::hasColumn('sellers', 'contact_person')) {
+                    $seller->contact_person = (string) ($validated['contact_person_name'] ?? '');
+                }
+                if (Schema::hasColumn('sellers', 'is_onboard')) {
+                    $seller->is_onboard = 1;
+                }
+                if (Schema::hasColumn('sellers', 'is_active') && $seller->is_active === null) {
+                    $seller->is_active = 0;
+                }
+                $seller->save();
 
                 return $seller;
             });
-
         } catch (ValidationException $e) {
             throw $e;
         } catch (QueryException $e) {
@@ -539,7 +526,7 @@ class SellerAdminController extends Controller
                         'email' => ['This email is already registered. Please use a different email.'],
                     ]);
                 }
-                if ($key !== '' && (str_contains($key, 'phone') || str_contains($key, 'PHONE') || str_contains($key, 'mobile') || str_contains($key, 'MOBILE'))) {
+                if ($key !== '' && (str_contains($key, 'mobile') || str_contains($key, 'MOBILE'))) {
                     throw ValidationException::withMessages([
                         'mobile' => ['This mobile number is already registered. Please use another number.'],
                     ]);
@@ -551,8 +538,8 @@ class SellerAdminController extends Controller
             }
 
             Log::error('Seller onboarding save failed (db)', [
-                'auth_id' => $authId,
-                'mobile' => $sessionMobile,
+                'login' => $login,
+                'mobile' => $sellerMobile,
                 'exception' => $e,
             ]);
 
@@ -566,8 +553,8 @@ class SellerAdminController extends Controller
                 : back()->with('error', 'Unable to save seller details. Please try again.');
         } catch (\Throwable $e) {
             Log::error('Seller onboarding save failed', [
-                'auth_id' => $authId,
-                'mobile' => $sessionMobile,
+                'login' => $login,
+                'mobile' => $sellerMobile,
                 'exception' => $e,
             ]);
 
@@ -586,11 +573,10 @@ class SellerAdminController extends Controller
             Auth::guard('seller')->login($seller);
             $request->session()->regenerate();
             $request->session()->forget([
-                'seller_onboard_auth_id',
                 'seller_onboard_mobile',
+                'seller_onboard_login',
                 'seller_onboard_captcha',
                 'seller_onboard_captcha_expires_at',
-                'seller_onboard_bank_verification',
             ]);
 
             return $request->expectsJson()
@@ -603,18 +589,18 @@ class SellerAdminController extends Controller
         }
 
         $pendingPayload = $validated;
-        $pendingPayload['mobile'] = $sessionMobile;
+        $pendingPayload['mobile'] = $sellerMobile;
         $pendingPayload['otp_mobile'] = (string) ($validated['contact_mobile'] ?? '');
         $pendingPayload['otp_email'] = (string) ($validated['email'] ?? '');
 
-        $request->session()->put('seller_registration_pending_auth_id', $authId);
+        $request->session()->put('seller_registration_pending_login', $login);
         $request->session()->put('seller_registration_pending_payload', $pendingPayload);
         $request->session()->put('seller_registration_pending_expires_at', now()->addMinutes(30)->timestamp);
 
         $sendResult = $this->sendRegistrationOtpToContacts(
-            $authId,
+            $login,
             (string) ($validated['email'] ?? ''),
-            (string) ($validated['contact_mobile'] ?? $sessionMobile)
+            $sellerMobile
         );
         $sent = (bool) ($sendResult['email_sent'] ?? false) || (bool) ($sendResult['sms_sent'] ?? false);
         if (!$sent) {
@@ -627,18 +613,17 @@ class SellerAdminController extends Controller
         }
 
         $request->session()->forget([
-            'seller_onboard_auth_id',
             'seller_onboard_mobile',
+            'seller_onboard_login',
             'seller_onboard_captcha',
             'seller_onboard_captcha_expires_at',
-            'seller_onboard_bank_verification',
         ]);
 
         if ($request->expectsJson()) {
             $payload = [
                 'status' => true,
                 'message' => 'OTP sent to your seller email and phone. Please verify to continue.',
-                'redirect_url' => route('registration-otp'),
+                'redirect_url' => route('seller.registration-otp'),
             ];
             if (app()->environment('local') || config('app.debug')) {
                 $payload['otp'] = $sendResult['otp'] ?? null;
@@ -646,15 +631,15 @@ class SellerAdminController extends Controller
             return response()->json($payload);
         }
 
-        return redirect()->route('registration-otp')->with('success', 'OTP sent to your seller email and contact phone. Please verify to continue.');
+        return redirect()->route('seller.registration-otp')->with('success', 'OTP sent to your seller email and contact phone. Please verify to continue.');
     }
 
 
-    private function sendRegistrationOtpToContacts(int $authId, string $email, string $phone): array
+    private function sendRegistrationOtpToContacts(string $login, string $email, string $phone): array
     {
         $otp = random_int(100000, 999999);
 
-        Cache::put($this->registrationOtpCacheKey($authId), $otp, now()->addMinutes(5));
+        Cache::put($this->registrationOtpCacheKey(crc32($login)), $otp, now()->addMinutes(5));
 
         $emailSent = false;
         $smsSent = false;
@@ -669,14 +654,14 @@ class SellerAdminController extends Controller
                     $emailSent = true;
                 } catch (\Throwable $e) {
                     Log::warning('Seller registration OTP email send failed', [
-                        'auth_id' => $authId,
+                        'login' => $login,
                         'email' => $sellerEmail,
                         'exception' => $e,
                     ]);
                 }
             } else {
                 Log::warning('Seller registration OTP email skipped: invalid email', [
-                    'auth_id' => $authId,
+                    'login' => $login,
                     'email' => $sellerEmail,
                 ]);
             }
@@ -690,7 +675,7 @@ class SellerAdminController extends Controller
                     $apiKey = (string) config('services.fast2sms.key');
                     if ($apiKey === '') {
                         Log::warning('Seller registration OTP SMS skipped: missing FAST2SMS key', [
-                            'auth_id' => $authId,
+                            'login' => $login,
                             'mobile' => $normalizedMobile,
                         ]);
                     } else {
@@ -710,7 +695,7 @@ class SellerAdminController extends Controller
                             $smsSent = true;
                         } else {
                             Log::warning('Seller registration OTP SMS failed', [
-                                'auth_id' => $authId,
+                                'login' => $login,
                                 'mobile' => $normalizedMobile,
                                 'response' => $response->json(),
                             ]);
@@ -720,7 +705,7 @@ class SellerAdminController extends Controller
             }
 
             Log::info('Seller registration OTP sent', [
-                'auth_id' => $authId,
+                'login' => $login,
                 'email' => $sellerEmail ?? null,
                 'mobile' => $normalizedMobile,
                 'email_sent' => $emailSent,
@@ -729,7 +714,7 @@ class SellerAdminController extends Controller
             ]);
         } catch (\Throwable $e) {
             Log::error('Seller registration OTP send failed', [
-                'auth_id' => $authId,
+                'login' => $login,
                 'email' => $email ?: null,
                 'mobile' => $phone ?: null,
                 'exception' => $e,
@@ -748,17 +733,17 @@ class SellerAdminController extends Controller
 
     public function showRegistrationOtpForm(Request $request)
     {
-        $authId = (int) $request->session()->get('seller_registration_pending_auth_id', 0);
+        $login = (string) $request->session()->get('seller_registration_pending_login', '');
         $payload = $request->session()->get('seller_registration_pending_payload');
         $expiresAt = (int) $request->session()->get('seller_registration_pending_expires_at', 0);
 
-        if ($authId <= 0 || !is_array($payload) || ($expiresAt > 0 && $expiresAt < now()->timestamp)) {
-            return redirect()->route('login');
+        if ($login === '' || !is_array($payload) || ($expiresAt > 0 && $expiresAt < now()->timestamp)) {
+            return redirect()->route('seller.login');
         }
 
         $sellerEmail = (string) ($payload['otp_email'] ?? $payload['email'] ?? '');
         $sellerPhone = (string) ($payload['otp_mobile'] ?? $payload['mobile'] ?? '');
-        
+
 
         return view('seller.selleronboard.registration-otp', compact('sellerEmail', 'sellerPhone'));
     }
@@ -770,32 +755,68 @@ class SellerAdminController extends Controller
             'otp' => ['required', 'digits:6'],
         ]);
 
-        $authId = (int) $request->session()->get('seller_registration_pending_auth_id', 0);
+        $login = (string) $request->session()->get('seller_registration_pending_login', '');
         $payload = $request->session()->get('seller_registration_pending_payload');
         $expiresAt = (int) $request->session()->get('seller_registration_pending_expires_at', 0);
 
-        if ($authId <= 0 || !is_array($payload) || ($expiresAt > 0 && $expiresAt < now()->timestamp)) {
-            return redirect()->route('login')->with('error', 'Session expired. Please login again.');
+        if ($login === '' || !is_array($payload) || ($expiresAt > 0 && $expiresAt < now()->timestamp)) {
+            return redirect()->route('seller.login')->with('error', 'Session expired. Please login again.');
         }
 
-        $storedOtp = Cache::get($this->registrationOtpCacheKey($authId));
+        $storedOtp = Cache::get($this->registrationOtpCacheKey(crc32($login)));
         if (!$storedOtp || (string) $storedOtp !== (string) $request->otp) {
             return back()->with('error', 'Invalid or expired OTP.');
         }
 
-        Cache::forget($this->registrationOtpCacheKey($authId));
+        $otpCacheKey = $this->registrationOtpCacheKey(crc32($login));
+        $processingLockKey = $otpCacheKey . '_processing';
 
-        $mobile = (string) ($payload['mobile'] ?? '');
+        // Prevent double-submit races from creating duplicate save attempts.
+        if (!Cache::add($processingLockKey, true, now()->addMinutes(2))) {
+            $seller = filter_var($login, FILTER_VALIDATE_EMAIL)
+                ? Sellers::query()->firstWhere('email', $login)
+                : Sellers::query()->firstWhere('mobile', preg_replace('/\D/', '', $login));
+            if ($seller && (int) $seller->is_onboard === 1) {
+                $this->ensureSellerSlug($seller);
+
+                $request->session()->forget([
+                    'seller_registration_pending_login',
+                    'seller_registration_pending_payload',
+                    'seller_registration_pending_expires_at',
+                    'seller_onboard_mobile',
+                    'seller_onboard_login',
+                    'seller_onboard_captcha',
+                    'seller_onboard_captcha_expires_at',
+                ]);
+
+                Auth::guard('seller')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('seller.login')
+                    ->with('success', 'Seller registration verified successfully. Please log in to continue.');
+            }
+
+            return back()->with('error', 'Your OTP verification is already in progress. Please wait and try again.');
+        }
+
+        Cache::forget($otpCacheKey);
+
+        $mobile = (string) ($payload['contact_mobile'] ?? $payload['mobile'] ?? '');
 
         try {
-            $seller = DB::transaction(function () use ($authId, $mobile, $payload) {
-                $seller = Sellers::query()->firstOrNew(['auth_id' => $authId]);
+            $seller = DB::transaction(function () use ($login, $mobile, $payload) {
+                if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+                    $seller = Sellers::query()->firstOrNew(['email' => $login]);
+                } else {
+                    $seller = Sellers::query()->firstOrNew(['mobile' => preg_replace('/\D/', '', $login)]);
+                }
 
                 if (Schema::hasColumn('sellers', 'email')) {
                     $seller->email = (string) ($payload['email'] ?? '');
                 }
-                if (Schema::hasColumn('sellers', 'phone') && $mobile !== '') {
-                    $seller->phone = $mobile;
+                if (Schema::hasColumn('sellers', 'mobile') && $mobile !== '') {
+                    $seller->mobile = $mobile;
                 }
                 if (Schema::hasColumn('sellers', 'name') && blank($seller->name)) {
                     $seller->name = (string) ($payload['store_display_name'] ?? '');
@@ -822,8 +843,6 @@ class SellerAdminController extends Controller
                         'legal_business_name' => (string) ($payload['legal_business_name'] ?? ''),
                         'store_display_name' => (string) ($payload['store_display_name'] ?? ''),
                         'business_type' => (string) ($payload['business_type'] ?? ''),
-                        'gst_available' => (string) ($payload['gst_available'] ?? '') === 'yes',
-                        'gst_number' => (string) ($payload['gst_available'] ?? '') === 'yes' ? (string) ($payload['gst_number'] ?? '') : null,
                         'pan_number' => (string) ($payload['pan_number'] ?? ''),
                         'pan_name' => (string) ($payload['pan_name'] ?? ''),
                     ],
@@ -857,16 +876,6 @@ class SellerAdminController extends Controller
                     ],
                 );
 
-                SellerBankDetail::updateOrCreate(
-                    ['seller_id' => $seller->id],
-                    [
-                        'account_holder_name' => (string) ($payload['account_holder_name'] ?? ''),
-                        'bank_name' => (string) ($payload['bank_name'] ?? ''),
-                        'account_number' => (string) ($payload['account_number'] ?? ''),
-                        'ifsc_code' => strtoupper((string) ($payload['ifsc_code'] ?? '')),
-                    ],
-                );
-
                 SellerSupplierDetail::updateOrCreate(
                     ['seller_id' => $seller->id],
                     [
@@ -880,50 +889,73 @@ class SellerAdminController extends Controller
 
                 return $seller;
             });
+
+            // send welcome mail
+            Mail::to($seller->email)->send(
+                new SellerRegistrationSuccessMail($seller)
+            );
+
+            // create notification
+            $payloadNotification = NotificationTemplateService::sellerWelcome($seller);
+
+            NotificationService::create([
+                'receiver_id' => $seller->id,
+                'receiver_type' => 'seller',
+                'title' => $payloadNotification['title'],
+                'message' => $payloadNotification['message'],
+                'type' => $payloadNotification['type'],
+                'details' => $payloadNotification['details'],
+                'reference_id' => $payloadNotification['reference_id'],
+                'is_read' => false,
+            ]);
+
         } catch (\Throwable $e) {
             Log::error('Seller onboarding save failed (post-otp)', [
-                'auth_id' => $authId,
+                'login' => $login,
                 'mobile' => $mobile,
                 'exception' => $e,
             ]);
+
+            Cache::forget($processingLockKey);
             return back()->with('error', 'Unable to save details right now. Please try again.');
         }
 
+        Cache::forget($processingLockKey);
+
         $request->session()->forget([
-            'seller_registration_pending_auth_id',
+            'seller_registration_pending_login',
             'seller_registration_pending_payload',
             'seller_registration_pending_expires_at',
-            'seller_onboard_auth_id',
             'seller_onboard_mobile',
+            'seller_onboard_login',
             'seller_onboard_captcha',
             'seller_onboard_captcha_expires_at',
-            'seller_onboard_bank_verification',
         ]);
 
         Auth::guard('seller')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')
+        return redirect()->route('seller.login')
             ->with('success', 'Seller registration verified successfully. Please log in to continue.');
     }
 
     public function resendRegistrationOtp(Request $request)
     {
-        $authId = (int) $request->session()->get('seller_registration_pending_auth_id', 0);
+        $login = (string) $request->session()->get('seller_registration_pending_login', '');
         $payload = $request->session()->get('seller_registration_pending_payload');
         $expiresAt = (int) $request->session()->get('seller_registration_pending_expires_at', 0);
 
-        if ($authId <= 0 || !is_array($payload) || ($expiresAt > 0 && $expiresAt < now()->timestamp)) {
+        if ($login === '' || !is_array($payload) || ($expiresAt > 0 && $expiresAt < now()->timestamp)) {
             return response()->json([
                 'status' => false,
                 'message' => 'Session expired. Please login again.',
-                'redirect_url' => route('login'),
+                'redirect_url' => route('seller.login'),
             ], 401);
         }
 
         $result = $this->sendRegistrationOtpToContacts(
-            $authId,
+            $login,
             (string) ($payload['otp_email'] ?? $payload['email'] ?? ''),
             (string) ($payload['otp_mobile'] ?? $payload['mobile'] ?? ''),
         );
@@ -948,116 +980,124 @@ class SellerAdminController extends Controller
         return response()->json($payload);
     }
 
+
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mobile' => ['required', 'digits:10'],
+            'login' => ['required'],
         ]);
 
         if ($validator->fails()) {
-            $response = [
+            return response()->json([
                 'status' => false,
                 'message' => $validator->errors()->first(),
-            ];
-
-            return $request->expectsJson()
-                ? response()->json($response, 422)
-                : back()->withErrors($validator)->withInput();
+            ], 422);
         }
 
-        $mobile = $request->mobile;
+        $login = trim($request->login);
 
         try {
-            $sellerAuth = SellerAuth::where('mobile', $mobile)->first();
-            if (!$sellerAuth) {
-                $sellerAuth = SellerAuth::where('mobile', '+91' . $mobile)->first();
+
+            if (preg_match('/^\d{10}$/', $login)) {
+                $type = 'mobile';
+            } elseif (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+                $type = 'email';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Enter valid mobile number or email',
+                ], 422);
             }
 
+            $normalizedLogin = preg_replace('/\D/', '', $login);
+            $sellerAuth = Sellers::where('mobile', $login)
+                ->orWhere('mobile', $normalizedLogin)
+                ->orWhere('mobile', '+91' . $normalizedLogin)
+                ->orWhere('email', $login)
+                ->first();
             if ($sellerAuth) {
-                $seller = Sellers::where('auth_id', $sellerAuth->id)->first();
+                if ((int) $sellerAuth->is_onboard === 1 && (int) $sellerAuth->is_active === 1) {
+                    // Existing sellers must still verify OTP before login completes.
+                    // We only send the OTP here; the actual guard login happens in verifyOtp().
+                }
 
-                if ($seller && !$seller->is_active) {
-                    $response = [
+                if ((int) $sellerAuth->is_onboard === 1 && (int) $sellerAuth->is_active !== 1) {
+                    return response()->json([
                         'status' => false,
-                        'message' => 'Your seller account is not active or verified.',
-                    ];
-
-                    return $request->expectsJson()
-                        ? response()->json($response, 403)
-                        : back()->with('error', $response['message']);
+                        'message' => 'Your account is waiting for admin approval.',
+                    ], 403);
                 }
             }
 
             $otp = random_int(100000, 999999);
-            Cache::put('otp_' . $mobile, $otp, now()->addMinutes(5));
 
-            $message = "Your login OTP is: $otp";
+            Cache::put('otp_' . $login, $otp, now()->addMinutes(5));
+            Cache::put('otp_login_type_' . $login, $type, now()->addMinutes(5));
 
-            $response = Http::asForm()->withHeaders([
-                'authorization' => env('FAST2SMS_API_KEY'),
-            ])->post('https://www.fast2sms.com/dev/bulkV2', [
-                        'route' => 'q',
-                        'message' => $message,
-                        'language' => 'english',
-                        'numbers' => $mobile,
-                    ]);
+            if ($type === 'mobile') {
 
-            if (!$response->successful()) {
-                $data = [
-                    'status' => false,
-                    'message' => 'Failed to send OTP. Please try again.',
-                ];
+                if (app()->environment('local')) {
+                    Log::info("LOGIN OTP for {$login}: {$otp}");
+                } else {
+                    $response = Http::asForm()->withHeaders([
+                        'authorization' => config('services.fast2sms.key'),
+                        'accept' => 'application/json',
+                    ])->post('https://www.fast2sms.com/dev/bulkV2', [
+                                'route' => 'q',
+                                'message' => "Your login OTP is: $otp",
+                                'language' => 'english',
+                                'numbers' => $login,
+                            ]);
 
-                if (config('app.debug')) {
-                    $data['otp'] = $otp;
-                    $data['mobile'] = $mobile;
-                    $data['provider_response'] = $response->json();
+                    if (!$response->successful()) {
+                        Log::warning('OTP SMS failed', [
+                            'login' => $login,
+                            'response' => $response->body(),
+                        ]);
+
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Failed to send OTP. Try again.',
+                        ], 500);
+                    }
                 }
+            } else {
 
-                return $request->expectsJson()
-                    ? response()->json($data, 500)
-                    : back()->with('error', $data['message']);
+                Mail::raw("Your login OTP is: $otp", function ($message) use ($login) {
+                    $message->to($login)
+                        ->subject('Your OTP Code');
+                });
             }
 
-            $data = [
+            return response()->json([
                 'status' => true,
-                'message' => 'OTP sent successfully',
-                'mobile' => $mobile,
-                'otp' => $otp,
-            ];
+                'next_step' => 'verify-otp',
+                'message' => 'OTP sent successfully. Please verify to continue.',
+                'type' => $type,
+                'login' => $login,
+                'user_exists' => $sellerAuth ? true : false,
 
-            return $request->expectsJson()
-                ? response()->json($data)
-                : redirect()->back()->with('success', 'OTP sent successfully');
+                'otp' => (app()->environment('local') || config('app.debug')) ? $otp : null,
+            ]);
         } catch (\Throwable $e) {
-            Log::error('Seller login OTP failed', [
-                'mobile' => $mobile,
-                'exception' => $e,
+
+            Log::error('Login OTP failed', [
+                'login' => $login,
+                'exception' => $e->getMessage(),
             ]);
 
-            $message = 'Something went wrong. Please try again later.';
-            if ($e instanceof \Illuminate\Http\Client\ConnectionException) {
-                $message = 'Unable to reach OTP service right now. Please try again later.';
-            }
-            if (config('app.debug')) {
-                $message .= ' (' . $e->getMessage() . ')';
-            }
-
-            $data = [
+            return response()->json([
                 'status' => false,
-                'message' => $message,
-            ];
-
-            return $request->expectsJson()
-                ? response()->json($data, 500)
-                : back()->with('error', $data['message']);
+                'message' => 'Something went wrong. Please try again later.',
+            ], 500);
         }
     }
+
 
     public function verifyOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'mobile' => 'required|digits:10',
+            'login' => 'required',
             'otp' => 'required|digits:6',
         ]);
 
@@ -1068,10 +1108,10 @@ class SellerAdminController extends Controller
             ], 422);
         }
 
-        $mobile = $request->mobile;
+        $login = trim($request->login);
         $otp = $request->otp;
 
-        $storedOtp = Cache::get('otp_' . $mobile);
+        $storedOtp = Cache::get('otp_' . $login);
 
         if (!$storedOtp || $storedOtp != $otp) {
             return response()->json([
@@ -1080,60 +1120,69 @@ class SellerAdminController extends Controller
             ], 401);
         }
 
-        Cache::forget('otp_' . $mobile);
+        $loginType = Cache::get('otp_login_type_' . $login);
+        Cache::forget('otp_' . $login);
+        Cache::forget('otp_login_type_' . $login);
 
-        $sellerAuth = SellerAuth::where('mobile', $mobile)->first();
-        if (!$sellerAuth) {
-            $sellerAuth = SellerAuth::where('mobile', '+91' . $mobile)->first();
-        }
+        $seller = null;
+        $isEmailLogin = $loginType === 'email' || filter_var($login, FILTER_VALIDATE_EMAIL);
+        $normalizedMobile = null;
 
-        if (!$sellerAuth) {
-            $sellerAuth = SellerAuth::create([
-                'mobile' => $mobile,
-                'is_mobile_verified' => 1,
-                'last_login_at' => now(),
-            ]);
+        if ($isEmailLogin) {
+            $seller = Sellers::where('email', $login)->first();
         } else {
-            $sellerAuth->update([
-                'is_mobile_verified' => 1,
-                'last_login_at' => now(),
-            ]);
+            $normalizedMobile = preg_replace('/\D/', '', $login);
+            $seller = Sellers::where('mobile', $normalizedMobile)->first();
+            if (!$seller && $normalizedMobile !== '') {
+                $seller = Sellers::where('mobile', '+91' . $normalizedMobile)->first();
+            }
         }
 
-        $seller = Sellers::where('auth_id', $sellerAuth->id)->first();
+        // Always store session for the registration flow.
+        $request->session()->put('seller_onboard_login', $login);
+        if ($isEmailLogin) {
+            $request->session()->put('seller_onboard_email', $login);
+        } else {
+            $request->session()->put('seller_onboard_mobile', $normalizedMobile ?: $login);
+        }
 
-        if (!$seller) {
-            $request->session()->put('seller_onboard_auth_id', $sellerAuth->id);
-            $request->session()->put('seller_onboard_mobile', $mobile);
+        /**
+         * ============================
+         * EXISTING USER (LOGIN FLOW)
+         * ============================
+         */
+        if ($seller && (int) $seller->is_onboard === 1) {
+
+            if ((int) $seller->is_active !== 1) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Your account is waiting for admin approval',
+                ], 403);
+            }
+
+            $this->ensureSellerSlug($seller);
+            Auth::guard('seller')->login($seller);
+            $request->session()->regenerate();
 
             return response()->json([
                 'status' => true,
-                'next_step' => 'business-details',
-                'redirect_url' => route('business-details'),
-                'message' => 'Please complete business details',
+                'next_step' => 'dashboard',
+                'redirect_url' => route('seller.dashboard', ['seller' => $seller->slug]),
+                'seller_slug' => $seller->slug,
+                'message' => 'Login successful',
             ]);
         }
 
-        if (!$seller->is_active) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Your account is waiting for admin approval',
-            ]);
-        }
-
-        $this->ensureSellerSlug($seller);
-
-        Auth::guard('seller')->login($seller);
-        $request->session()->regenerate();
-        $request->session()->forget(['seller_onboard_auth_id', 'seller_onboard_mobile']);
-
+        /**
+         * ============================
+         * NEW USER (REGISTRATION FLOW)
+         * ============================
+         */
         return response()->json([
             'status' => true,
-            'next_step' => 'dashboard',
-            'redirect_url' => route('seller.dashboard', ['seller' => $seller->slug]),
-            'seller_slug' => $seller->slug,
-            'message' => 'Login successful',
+            'next_step' => 'business-details',
+            'redirect_url' => route('seller.business-details'),
+            'message' => 'Please complete your registration',
         ]);
     }
-
 }

@@ -2,52 +2,34 @@
 
 namespace App\Http\Controllers\Seller;
 
-use App\Http\Controllers\Controller;
-use App\Models\OrderItem;
-use App\Models\Products;
 use App\Models\Sellers;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Services\Seller\SellerDashboardService;
+use Illuminate\Support\Facades\DB;
 
 class SellerDashboardController extends Controller
 {
-    /**
-     * Display the seller dashboard.
-     */
-    public function index(Request $request, Sellers $seller)
+    public function index(Sellers $seller, SellerDashboardService $sellerDashboardService)
     {
-        // Security check: Ensure the logged-in seller is accessing their own slug
-        if (Auth::guard('seller')->id() !== $seller->id) {
+        $sellerUser = Auth::guard('seller')->user();
+        if (
+            !$sellerUser ||
+            (
+                (int) $sellerUser->id !== (int) $seller->id &&
+                (
+                    empty($sellerUser->auth_id) ||
+                    (int) $sellerUser->auth_id !== (int) $seller->auth_id
+                )
+            )
+        ) {
             abort(403);
         }
 
-        $id = $seller->id;
-
-        $totalProducts = Products::where('seller_id', $id)->count();
-
-        $totalOrders = OrderItem::whereHas('product', function ($q) use ($id) {
-            $q->where('seller_id', $id);
-        })->count();
-
-        $totalEarning = OrderItem::whereHas('product', function ($q) use ($id) {
-            $q->where('seller_id', $id);
-        })->sum('price');
-
-        $recentOrders = OrderItem::with('product', 'order')
-            ->whereHas('product', function ($q) use ($id) {
-                $q->where('seller_id', $id);
-            })->latest()
-            ->take(10)
-            ->get();
-
-        return view('seller.dashboard', compact(
-            'seller',
-            'totalProducts',
-            'totalOrders',
-            'totalEarning',
-            'recentOrders'
-        ));
+        $data = $sellerDashboardService->getData($seller->id);
+        $hasBulkActivity = DB::table('ingestion_batches')
+            ->where('seller_id', $seller->id)
+            ->exists();
+        return view('seller.dashboard', array_merge(['seller' => $sellerUser], $data), compact('hasBulkActivity'));
     }
-
-
 }

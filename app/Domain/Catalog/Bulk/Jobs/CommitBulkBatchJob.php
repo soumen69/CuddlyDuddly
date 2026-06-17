@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Domain\Catalog\Bulk\Commit\BulkCommitEngine;
 use Illuminate\Support\Facades\DB;
+use App\Domain\Catalog\Bulk\Review\BatchWorkflowManager;
 
 class CommitBulkBatchJob implements ShouldQueue
 {
@@ -21,32 +22,56 @@ class CommitBulkBatchJob implements ShouldQueue
         public int $batchId
     ) {}
 
-    public function handle(
-        BulkCommitEngine $engine
-    ): void {
+    // public function handle(
+    //     BulkCommitEngine $engine
+    // ): void {
 
+    //     try {
+
+    //         $engine->commitBatch(
+    //             $this->batchId
+    //         );
+    //     } catch (\Throwable $e) {
+
+    //         DB::table('ingestion_batches')
+
+    //             ->where(
+    //                 'id',
+    //                 $this->batchId
+    //             )
+
+    //             ->update([
+
+    //                 'status' =>
+    //                 'commit_failed',
+
+    //                 'updated_at' =>
+    //                 now(),
+    //             ]);
+
+    //         report($e);
+
+    //         throw $e;
+    //     }
+    // }
+
+
+    public function handle(BulkCommitEngine $engine, BatchWorkflowManager $workflow): void
+    {
         try {
 
             $engine->commitBatch(
                 $this->batchId
             );
+
+            $workflow->publishingCompleted(
+                $this->batchId
+            );
         } catch (\Throwable $e) {
 
-            DB::table('ingestion_batches')
-
-                ->where(
-                    'id',
-                    $this->batchId
-                )
-
-                ->update([
-
-                    'status' =>
-                    'commit_failed',
-
-                    'updated_at' =>
-                    now(),
-                ]);
+            $workflow->publishingFailed(
+                $this->batchId
+            );
 
             report($e);
 

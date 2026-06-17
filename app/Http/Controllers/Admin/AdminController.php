@@ -10,18 +10,24 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Sellers;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
 
     public function showAdminLoginForm()
     {
-        // redirect if already logged in
         if (Auth::guard('admin')->check()) {
             return redirect()->route('admin.dashboard');
         }
 
-        return view('admin.login');
+        $roles = DB::table('roles')
+            ->select('id', 'name')
+            ->whereNotNull('name')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.login', compact('roles'));
     }
 
     public function showSellerLoginForm()
@@ -144,10 +150,10 @@ class AdminController extends Controller
             return back()->withErrors(['status' => 'No role assigned to your account. Please contact Super Admin.'])->withInput();
         }
 
-        // 🧩 Match user-selected type with the assigned role slug
-        if ($user->role->slug !== $userType) {
-            return back()->withErrors(['user_type' => 'You do not have access to this user type.'])->withInput();
-        }
+        // // 🧩 Match user-selected type with the assigned role slug
+        // if ($user->role->slug !== $userType) {
+        //     return back()->withErrors(['user_type' => 'You do not have access to this user type.'])->withInput();
+        // }
 
 
 

@@ -16,19 +16,127 @@
                     @php
                         $images = $initialImages;
                     @endphp
-                    <div class="mcp-img-stage">
+                    <div class="mcp-img-stage" id="mcpZoomWrapper">
+                        {{-- Zoom lens --}}
+                        <div id="mcpZoomLens" class="mcp-zoom-lens hidden"></div>
+
                         <img id="mcpMainImg" class="mcp-img-main"
                             src="{{ asset('storage/' . ($images[0]->image_path ?? 'fallback.png')) }}"
                             alt="{{ $product->name }}" onerror="this.src='{{ asset('storage/fallback.png') }}'">
-                    </div>
-                    <div class="mcp-thumbs" id="pdpThumbContainer">
-                        @foreach ($images as $index => $img)
-                            <div class="mcp-thumb {{ $index == 0 ? 'mcp-thumb--active' : '' }}"
-                                data-src="{{ asset('storage/' . $img->image_path) }}">
-                                <img src="{{ asset('storage/' . $img->image_path) }}"
-                                    onerror="this.src='{{ asset('storage/fallback.png') }}'">
+                        <div id="mcpZoomResult" class="mcp-zoom-result hidden">
+                            <div class="mcp-zoom-panel">
+                                <img id="mcpZoomImg"
+                                    src="{{ asset('storage/' . ($images[0]->image_path ?? 'fallback.png')) }}"
+                                    alt="zoom preview">
                             </div>
-                        @endforeach
+                        </div>
+
+                        <!-- Wishlist & Share Buttons -->
+                        <div class="flex gap-2 absolute right-5 top-5 product-wishlist-share">
+                            <button type="button" id="share_product" class="product-wishlist-btn cursor-pointer">
+                                <img src="{{ asset('storage/WebsiteImages/category/share.png') }}" alt="share icon">
+                            </button>
+                            <button type="button" id="add_to_wishlist" class="product-wishlist-btn cursor-pointer"
+                                data-wishlisted="false"
+                                onclick="
+                                    const btn = this;
+                                    const wishlisted = btn.dataset.wishlisted === 'true';
+                                    btn.dataset.wishlisted = !wishlisted;
+                                    btn.querySelector('.heart-outline').classList.toggle('hidden', !wishlisted === false ? false : true);
+                                    btn.querySelector('.heart-filled').classList.toggle('hidden', !wishlisted === false ? true : false);">
+                                {{-- Outline icon (default) --}}
+                                <svg class="heart-outline block" xmlns="http://www.w3.org/2000/svg" width="15"
+                                    height="15" viewBox="0 0 15 15" fill="none">
+                                    <g clip-path="url(#clip0_1863_399)">
+                                        <path
+                                            d="M7.43603 13.5356C7.23593 13.5361 7.03771 13.4969 6.85283 13.4204C6.66795 13.3438 6.50008
+                                                                                                 13.2314 6.35891 13.0896L1.43155 8.16205C0.69994 7.43044 0.296875 6.45773 0.296875 5.42285V5.36231C0.296875
+                                                                                                  4.32743 0.69994 3.35458 1.43155 2.62311C2.16317 1.89164 3.13618 1.48828 4.17061 1.48828H4.23159C5.26602 1.48828
+                                                                                                   6.23903 1.89135 6.97065 2.62296L7.43603 3.08834L7.90141 2.62296C8.63303 1.89135 9.60603 1.48828 10.6405
+                                                                                                    1.48828H10.7014C11.7359 1.48828 12.7089 1.89135 13.4405 2.62296C14.1721 3.35458 14.5752 4.32729 14.5752
+                                                                                                     5.36217V5.4227C14.5752 6.45758 14.1721 7.43044 13.4405 8.1619L8.51315 13.0894C8.37201 13.2313 8.20414
+                                                                                                      13.3438 8.01926 13.4203C7.83438 13.4969 7.63615 13.5361 7.43603 13.5356ZM6.98983 12.4585C7.22899 12.6972
+                                                                                                       7.64351 12.6966 7.88223 12.4583L12.8096 7.53128C13.0873 7.25499 13.3074 6.92639 13.4573 6.56449C13.6072
+                                                                                                        6.20258 13.6838 5.81456 13.6828 5.42285V5.36231C13.6828 4.56585 13.3725 3.81713 12.8096 3.25403C12.2466
+                                                                                                         2.69093 11.4976 2.38068 10.7014 2.38068H10.6405C10.2488 2.37957 9.86078 2.45618 9.49892 2.60607C9.13705
+                                                                                                          2.75596 8.80852 2.97615 8.53234 3.25388L7.75149 4.03473C7.71008 4.07618 7.6609 4.10907 7.60677 4.13151C7.55264
+                                                                                                           4.15394 7.49462 4.16549 7.43603 4.16549C7.37743 4.16549 7.31941 4.15394 7.26528 4.13151C7.21116 4.10907 7.16198
+                                                                                                            4.07618 7.12057 4.03473L6.33972 3.25388C6.06354 2.97615 5.73501 2.75596 5.37314 2.60607C5.01127 2.45618
+                                                                                                             4.62327 2.37957 4.23159 2.38068H4.17061C3.37445 2.38068 2.62543 2.69063 2.06248 3.25388C1.49953 3.81713
+                                                                                                              1.18927 4.5657 1.18927 5.36217V5.4227C1.18822 5.81439 1.26486 6.2024 1.41474 6.56429C1.56463 6.92617
+                                                                                                               1.78478 7.25474 2.06248 7.53098L6.98983 12.4585Z"
+                                            fill="black" />
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_1863_399">
+                                            <rect width="14.8732" height="14.8732" fill="white" />
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+
+                                {{-- Filled icon (wishlisted state) --}}
+                                <svg class="heart-filled hidden" xmlns="http://www.w3.org/2000/svg" width="15"
+                                    height="15" viewBox="0 0 15 15" fill="none">
+                                    <path
+                                        d="M13.4405 2.62296C12.7089 1.89135 11.7359 1.48828 10.7014 1.48828H10.6405C9.60603 1.48828
+                                                                                     8.63303 1.89135 7.90141 2.62296L7.43603 3.08834L6.97065 2.62296C6.23903 1.89135 5.26602
+                                                                                      1.48828 4.23159 1.48828H4.17061C3.13618 1.48828 2.16317 1.89164 1.43155 2.62311C0.69994
+                                                                                       3.35458 0.296875 4.32743 0.296875 5.36231V5.42285C0.296875 6.45773 0.69994 7.43044 1.43155
+                                                                                        8.16205L6.35891 13.0896C6.50008 13.2314 6.66795 13.3438 6.85283 13.4204C7.03771 13.4969
+                                                                                         7.23593 13.5361 7.43603 13.5356C7.63615 13.5361 7.83438 13.4969 8.01926 13.4203C8.20414
+                                                                                          13.3438 8.37201 13.2313 8.51315 13.0894L13.4405 8.1619C14.1721 7.43044 14.5752 6.45758
+                                                                                           14.5752 5.4227V5.36217C14.5752 4.32729 14.1721 3.35458 13.4405 2.62296Z"
+                                        fill="#000" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    {{-- Thumb column wrapper (shown only on lg+) --}}
+                    <div class="mcp-thumbs-wrapper hidden lg:flex" id="pdpThumbWrapper">
+                        {{-- Scroll Up arrow --}}
+                        <button class="mcp-thumb-arrow mcp-thumb-arrow--up pdp-arrow-hidden" id="pdpThumbArrowUp"
+                            aria-label="Scroll previous">
+                            {{-- Left chevron: mobile --}}
+                            <svg class="block lg:hidden" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                            {{-- Up chevron: desktop --}}
+                            <svg class="hidden lg:block" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="18 15 12 9 6 15"></polyline>
+                            </svg>
+                        </button>
+
+                        {{-- Scrollable track --}}
+                        <div class="mcp-thumbs" id="pdpThumbContainer">
+                            @foreach ($images as $index => $img)
+                                <div class="mcp-thumb {{ $index == 0 ? 'mcp-thumb--active' : '' }}"
+                                    data-src="{{ asset('storage/' . $img->image_path) }}">
+                                    <img src="{{ asset('storage/' . $img->image_path) }}"
+                                        onerror="this.src='{{ asset('storage/fallback.png') }}'">
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Scroll Down arrow --}}
+                        <button class="mcp-thumb-arrow mcp-thumb-arrow--down pdp-arrow-hidden" id="pdpThumbArrowDown"
+                            aria-label="Scroll next">
+                            {{-- Right chevron: mobile --}}
+                            <svg class="block lg:hidden" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                            {{-- Down chevron: desktop --}}
+                            <svg class="hidden lg:block" xmlns="http://www.w3.org/2000/svg" width="14"
+                                height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 <div class="product-review-zone mt-12 hidden lg:block">
@@ -183,30 +291,24 @@
                         {{-- ================= VISUAL ATTRIBUTE ================= --}}
                         @if ($attrData['attribute']->is_visual)
                             <div class="mcp-color-group variant-group" data-attribute="{{ $attrId }}">
-
                                 @foreach ($attrData['values'] as $val)
                                     <div class="mcp-color-swatch variant-option" data-attribute="{{ $attrId }}"
                                         data-value="{{ $val->id }}" style="background: {{ $val->value }}">
                                     </div>
                                 @endforeach
-
                             </div>
-
                             {{-- ================= NORMAL ATTRIBUTE ================= --}}
                         @else
                             <div class="mcp-size-group variant-group" data-attribute="{{ $attrId }}">
-
                                 @foreach ($attrData['values'] as $val)
                                     <button class="mcp-size-btn variant-option" data-attribute="{{ $attrId }}"
                                         data-value="{{ $val->id }}">
                                         {{ $val->value }}
                                     </button>
                                 @endforeach
-
                             </div>
                         @endif
                     @endforeach
-
                 @endif
 
                 <!-- ── Quantity purchase── -->
@@ -563,6 +665,197 @@
                 });
             }
 
+            function initThumbScroll() {
+                const track = document.getElementById('pdpThumbContainer');
+                const arrowUp = document.getElementById('pdpThumbArrowUp');
+                const arrowDown = document.getElementById('pdpThumbArrowDown');
+
+                if (!track || !arrowUp || !arrowDown) return;
+
+                const thumbEls = Array.from(track.querySelectorAll('.mcp-thumb'));
+
+                function isDesktop() {
+                    return window.innerWidth >= 1024;
+                }
+
+                function getThreshold() {
+                    if (window.innerWidth < 640) return 4; // <sm: show 4
+                    if (window.innerWidth < 1024) return 5; // sm–md: show 5
+                    return 4; // desktop: 4 vertical
+                }
+
+                function needsScroll() {
+                    return thumbEls.length > getThreshold();
+                }
+
+                function showArrows(show) {
+                    arrowUp.classList.toggle('pdp-arrow-hidden', !show);
+                    arrowDown.classList.toggle('pdp-arrow-hidden', !show);
+                }
+
+                function getScrollStep() {
+                    const thumb = thumbEls[0];
+                    if (!thumb) return 100;
+                    const rect = thumb.getBoundingClientRect();
+                    const gap = parseFloat(getComputedStyle(track).gap) || 10;
+                    return (isDesktop() ? rect.height : rect.width) + gap;
+                }
+
+                function syncArrows() {
+                    if (!needsScroll()) {
+                        showArrows(false);
+                        return;
+                    }
+                    showArrows(true);
+
+                    let atStart, atEnd;
+                    if (isDesktop()) {
+                        atStart = track.scrollTop <= 2;
+                        atEnd = track.scrollTop + track.clientHeight >= track.scrollHeight - 2;
+                    } else {
+                        atStart = track.scrollLeft <= 2;
+                        atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
+                    }
+
+                    arrowUp.style.opacity = atStart ? '0.3' : '1';
+                    arrowUp.style.pointerEvents = atStart ? 'none' : 'auto';
+                    arrowDown.style.opacity = atEnd ? '0.3' : '1';
+                    arrowDown.style.pointerEvents = atEnd ? 'none' : 'auto';
+                }
+
+                arrowUp.addEventListener('click', () => {
+                    const step = getScrollStep();
+                    if (isDesktop()) {
+                        track.scrollTo({
+                            top: track.scrollTop - step,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        track.scrollTo({
+                            left: track.scrollLeft - step,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+
+                arrowDown.addEventListener('click', () => {
+                    const step = getScrollStep();
+                    if (isDesktop()) {
+                        track.scrollTo({
+                            top: track.scrollTop + step,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        track.scrollTo({
+                            left: track.scrollLeft + step,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+
+                track.addEventListener('scroll', syncArrows, {
+                    passive: true
+                });
+                window.addEventListener('resize', () => {
+                    syncArrows();
+                }, {
+                    passive: true
+                });
+
+                syncArrows();
+            }
+            initThumbScroll();
+
+            function initImageZoom() {
+
+                const wrapper = document.getElementById('mcpZoomWrapper');
+                const img = document.getElementById('mcpMainImg');
+                const lens = document.getElementById('mcpZoomLens');
+                const result = document.getElementById('mcpZoomResult');
+                const zoomImg = document.getElementById('mcpZoomImg');
+
+                if (!wrapper || !img || !lens || !result || !zoomImg) return;
+
+                const lensSize = 140;
+                const zoomLevel = 2.5;
+
+                function isDesktop() {
+                    return window.innerWidth >= 1024;
+                }
+
+                function activateZoom() {
+
+                    if (!isDesktop()) return;
+
+                    if (window.innerWidth < 1024) return;
+
+                    lens.classList.remove('hidden');
+                    result.style.display = 'block';
+
+                    zoomImg.src = img.src;
+                }
+
+                function deactivateZoom() {
+                    lens.classList.add('hidden');
+                    result.style.display = 'none';
+                }
+
+                wrapper.addEventListener('mouseenter', activateZoom);
+
+                wrapper.addEventListener('mouseleave', deactivateZoom);
+
+                wrapper.addEventListener('mousemove', function(e) {
+
+                    if (!isDesktop()) return;
+
+                    const rect = img.getBoundingClientRect();
+
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    let lensX = x - lensSize / 2;
+                    let lensY = y - lensSize / 2;
+
+                    lensX = Math.max(
+                        0,
+                        Math.min(lensX, rect.width - lensSize)
+                    );
+
+                    lensY = Math.max(
+                        0,
+                        Math.min(lensY, rect.height - lensSize)
+                    );
+
+                    lens.style.left = `${lensX}px`;
+                    lens.style.top = `${lensY}px`;
+
+                    const zoomedWidth = rect.width * zoomLevel;
+                    const zoomedHeight = rect.height * zoomLevel;
+
+                    zoomImg.style.width = `${zoomedWidth}px`;
+                    zoomImg.style.height = `${zoomedHeight}px`;
+
+                    const percentX = lensX / (rect.width - lensSize);
+                    const percentY = lensY / (rect.height - lensSize);
+
+                    const moveX =
+                        (zoomedWidth - result.clientWidth) * percentX;
+
+                    const moveY =
+                        (zoomedHeight - result.clientHeight) * percentY;
+
+                    zoomImg.style.left = `-${moveX}px`;
+                    zoomImg.style.top = `-${moveY}px`;
+                });
+
+                window.addEventListener('resize', () => {
+                    if (!isDesktop()) {
+                        deactivateZoom();
+                    }
+                });
+            }
+            initImageZoom();
+
 
             // ================= VARIANT ENGINE =================
 
@@ -680,7 +973,15 @@
                         div.innerHTML = `<img src="${url}">`;
                         container.appendChild(div);
                     });
-                    main.src = '/storage/' + images[0].image_path;
+                    // main.src = '/storage/' + images[0].image_path;
+                    const newSrc = '/storage/' + images[0].image_path;
+
+                    main.src = newSrc;
+
+                    const zoomImg = document.getElementById('mcpZoomImg');
+                    if (zoomImg) {
+                        zoomImg.src = newSrc;
+                    }
                     main.style.opacity = 1;
                 }, 120);
             }
@@ -885,5 +1186,4 @@
             });
         </script>
     @endpush
-
 @endsection

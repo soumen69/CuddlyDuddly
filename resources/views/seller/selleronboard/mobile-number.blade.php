@@ -58,15 +58,19 @@
                             <div class="alert alert-danger">{{ session('error') }}</div>
                         @endif
 
-                            <label for="cd-mobile-input" class="cd-input-label">
-                                Enter Mobile number
+                            <label for="cd-login-input" class="cd-input-label">
+                                Enter mobile number or email address
                             </label>
 
                             <div class="cd-phone-wrap">
-                                <span class="cd-phone-prefix">+91</span>
-                                <input id="cd-mobile-input" class="cd-phone-input" type="tel" maxlength="10"
-                                    autocomplete="tel" oninput="cdOnMobileInput(this)"
-                                    placeholder="Enter 10-digit number" />
+                                <span id="cd-phone-prefix" style="padding-top:3px ;" class="cd-phone-prefix">+91</span>
+                                <span id="cd-email-icon" class="cd-phone-prefix" style="display:none;">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                
+                            <input id="cd-login-input" class="cd-phone-input" type="text" maxlength="50"
+                                    autocomplete="username" oninput="cdOnMobileInput(this)"
+                                    placeholder="Enter mobile number or email" />
                             </div>
 
                             <div class="cd-terms-row">
@@ -108,7 +112,10 @@
 
                             <h1 class="cd-heading">Start Selling Online</h1>
                             <p id="cd-otp-subheading" class="cd-subheading">
-                                Enter the OTP sent to +91 <span id="cd-otp-phone-display"></span>
+                                <span id="cd-otp-target-icon" style="display:none; margin-right:6px;">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                Enter the OTP sent to <span id="cd-otp-phone-display"></span>
                             </p>
 
                             <label class="cd-input-label">Enter 6-Digit OTP</label>

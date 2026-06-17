@@ -38,8 +38,8 @@
 
                 <div class="form-group mb-3">
                     <label for="password">Password</label>
-                    <input type="password" class="form-control @error('password') is-invalid @enderror"
-                        id="password" name="password" placeholder="Enter password" required>
+                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password"
+                        name="password" placeholder="Enter password" required>
                     @error('password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -47,17 +47,18 @@
 
                 <div class="form-group mb-4">
                     <label for="userType">User Type</label>
-                    <select class="form-select @error('user_type') is-invalid @enderror"
-                        id="userType" name="user_type" required>
+
+                    <select class="form-select @error('user_type') is-invalid @enderror" id="userType" name="user_type"
+                        required>
                         <option value="">-- Select User Type --</option>
-                        <option value="super-admin" {{ old('user_type') == 'super-admin' ? 'selected' : '' }}>Super Admin</option>
-                        <option value="admin" {{ old('user_type') == 'admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="support" {{ old('user_type') == 'support' ? 'selected' : '' }}>Support Staff</option>
-                        <option value="inventory-manager" {{ old('user_type') == 'inventory-manager' ? 'selected' : '' }}>Inventory Manager</option>
-                        <option value="accountant" {{ old('user_type') == 'accountant' ? 'selected' : '' }}>Accountant</option>
-                        <option value="marketing-manager" {{ old('user_type') == 'marketing-manager' ? 'selected' : '' }}>Marketing Manager</option>
-                        <option value="viewer" {{ old('user_type') == 'viewer' ? 'selected' : '' }}>Viewer</option>
+
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->id }}" {{ old('user_type') == $role->id ? 'selected' : '' }}>
+                                {{ $role->name }}
+                            </option>
+                        @endforeach
                     </select>
+
                     @error('user_type')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -84,6 +85,7 @@
     </script>
 
 </body>
+
 </html>
 
 

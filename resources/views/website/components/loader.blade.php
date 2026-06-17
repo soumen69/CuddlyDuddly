@@ -1,26 +1,24 @@
 {{-- using Tailwind CSS --}}
 
-{{-- <div class="flex items-center justify-center w-full h-full py-10">
-    <div class="relative w-16 h-16">
-        <div
-            class="absolute w-3 h-3 bg-pink-500 rounded-full animate-bounce [animation-delay:-0.3s] top-0 left-1/2 -translate-x-1/2">
+<div class="grid grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
+
+    @for ($i = 0; $i < 6; $i++)
+        <div class="flex flex-col">
+
+            <div class="aspect-square rounded-2xl bg-gray-200"></div>
+
+            <div class="h-4 bg-gray-200 rounded mt-4 w-3/4"></div>
+
+            <div class="h-3 bg-gray-100 rounded mt-2 w-full"></div>
+
+            <div class="h-3 bg-gray-100 rounded mt-2 w-2/3"></div>
+
+            <div class="h-5 bg-gray-200 rounded mt-4 w-1/3"></div>
+
         </div>
-        <div class="absolute w-3 h-3 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s] top-1/4 right-0">
-        </div>
-        <div class="absolute w-3 h-3 bg-yellow-500 rounded-full animate-bounce top-1/2 right-0"></div>
-        <div
-            class="absolute w-3 h-3 bg-green-500 rounded-full animate-bounce [animation-delay:-0.15s] bottom-1/4 right-0">
-        </div>
-        <div
-            class="absolute w-3 h-3 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.3s] bottom-0 left-1/2 -translate-x-1/2">
-        </div>
-        <div class="absolute w-3 h-3 bg-red-500 rounded-full animate-bounce [animation-delay:-0.15s] bottom-1/4 left-0">
-        </div>
-        <div class="absolute w-3 h-3 bg-indigo-500 rounded-full animate-bounce top-1/2 left-0"></div>
-        <div class="absolute w-3 h-3 bg-teal-500 rounded-full animate-bounce [animation-delay:-0.15s] top-1/4 left-0">
-        </div>
-    </div>
-</div> --}}
+    @endfor
+
+</div>
 
 
 
@@ -28,7 +26,7 @@
 
 
 
-<style>
+{{-- <style>
     .dot-loader-wrapper {
         display: flex;
         align-items: center;
@@ -139,4 +137,4 @@
         <span></span>
         <span></span>
     </div>
-</div>
+</div> --}}

@@ -185,24 +185,21 @@
 
                             <div class="d-flex align-items-center gap-2 flex-wrap">
 
-                                {{-- TEMPLATE WIZARD --}}
-                                <button id="openBulkWizard" class="btn btn-primary btn-sm shadow-sm">
+                                {{-- <button id="openBulkWizard" class="btn btn-primary btn-sm shadow-sm">
                                     <i class="bi bi-file-earmark-spreadsheet me-1"></i>
                                     Generate Template
                                 </button>
 
-                                {{-- BULK EXCEL UPLOAD --}}
                                 <a href="{{ route('admin.bulk.upload.index') }}" class="btn btn-dark btn-sm shadow-sm">
                                     <i class="bi bi-cloud-arrow-up me-1"></i>
                                     Upload Excel
                                 </a>
 
-                                {{-- BATCH HISTORY --}}
                                 <a href="{{ route('admin.bulk.batches.index') }}"
                                     class="btn btn-outline-secondary btn-sm shadow-sm">
                                     <i class="bi bi-clock-history me-1"></i>
                                     Bulk History
-                                </a>
+                                </a> --}}
 
                                 {{-- SINGLE PRODUCT --}}
                                 @canAccess('admin.products.create')
@@ -231,7 +228,7 @@
                             <!-- Compact dropdowns -->
                             <div class="col-lg-1 col-md-2 col-6">
                                 <select name="approval_status" class="form-select form-select-sm">
-                                    <option value="">Approval</option>
+                                    <option value="" selected disabled>Approval</option>
                                     <option value="approved"
                                         {{ request('approval_status') == 'approved' ? 'selected' : '' }}>Approved</option>
                                     <option value="pending" {{ request('approval_status') == 'pending' ? 'selected' : '' }}>
@@ -241,7 +238,7 @@
 
                             <div class="col-lg-1 col-md-2 col-6">
                                 <select name="featured" class="form-select form-select-sm">
-                                    <option value="">Featured</option>
+                                    <option value="" selected disabled>Featured</option>
                                     <option value="1" {{ request('featured') == '1' ? 'selected' : '' }}>Yes</option>
                                     <option value="0" {{ request('featured') == '0' ? 'selected' : '' }}>No</option>
                                 </select>
@@ -302,11 +299,11 @@
                         </button>
                         @endcanAccess
 
-                        @canAccess('admin.products.bulk_feature')
+                        {{-- @canAccess('admin.products.bulk_feature')
                         <button class="btn btn-outline-warning btn-sm" id="featureSelected">
                             <i class="bi bi-star"></i>
                         </button>
-                        @endcanAccess
+                        @endcanAccess --}}
 
                         @canAccess('admin.products.bulk_approve')
                         <button class="btn btn-outline-success btn-sm" id="approveSelected">
@@ -487,7 +484,7 @@
             </div>
         </div>
     </div>
-    @include('admin.partials.bulk-upload-wizard')
+    {{-- @include('admin.partials.bulk-upload-wizard') --}}
 
     @push('scripts')
         {{-- KEEP original scripts only — no inline behavior injected here --}}
@@ -496,7 +493,7 @@
             window.storageBase = "{{ url('/storage/') }}/";
         </script>
         <script src="{{ asset('js/products-index.js') }}"></script>
-        <script>
+        {{-- <script>
             $(function() {
 
                 const modalEl = document.getElementById('bulkUploadWizard');
@@ -756,7 +753,7 @@
                 });
 
             });
-        </script>
+        </script> --}}
     @endpush
 
     {{-- Confirm Delete Modal (unchanged behavior) --}}
