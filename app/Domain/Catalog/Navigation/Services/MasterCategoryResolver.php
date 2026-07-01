@@ -80,13 +80,19 @@
 // }
 
 
+
 namespace App\Domain\Catalog\Navigation\Services;
 
 use App\Domain\Catalog\Navigation\DTO\MasterCategoryMatch;
 use App\Domain\Catalog\Navigation\DTO\ProductNavigationContext;
+use App\Domain\Catalog\Navigation\Repositories\MasterCategoryMappingRepository;
 
 class MasterCategoryResolver
 {
+    public function __construct(
+        private readonly MasterCategoryMappingRepository $repository
+    ) {}
+
     /**
      * @return array<MasterCategoryMatch>
      */
@@ -96,87 +102,104 @@ class MasterCategoryResolver
 
         $matches = [];
 
-        $category = strtolower(
-            $context->categoryName ?? ''
+        $mappings = $this->repository->findMatches(
+            $context->categoryId,
+            $context->subCategoryId
         );
 
-        $subCategory = strtolower(
-            $context->subCategoryName ?? ''
-        );
+        foreach ($mappings as $mapping) {
 
-        $gender = collect(
-            $context->attributes['gender'] ?? []
-        )
-            ->map(fn($value) => strtolower($value))
-            ->implode(' ');
+            $masterCategory =
+                $mapping->masterCategory;
 
-        /*
-        |--------------------------------------------------------------------------
-        | BOY FASHION
-        |--------------------------------------------------------------------------
-        */
+            if (! $masterCategory) {
+                continue;
+            }
 
-        if (
-            str_contains($category, 'clothes')
-            && str_contains($gender, 'boy')
-        ) {
-
-            $matches[] = new MasterCategoryMatch(
-                masterCategoryId: 1,
-                masterCategoryName: 'BOY FASHION',
-                confidence: 95,
-                reasons: [
-                    'category_match',
-                    'gender_match',
-                ]
-            );
+            $matches[$masterCategory->id] =
+                new MasterCategoryMatch(
+                    masterCategoryId: $masterCategory->id,
+                    masterCategoryName: $masterCategory->name,
+                    confidence: 80,
+                    reasons: [
+                        'mapping_match',
+                    ]
+                );
         }
 
         /*
         |--------------------------------------------------------------------------
-        | GIRL FASHION
+        | Clothes & Shoes Specialization
         |--------------------------------------------------------------------------
         */
 
         if (
-            str_contains($category, 'clothes')
-            && str_contains($gender, 'girl')
+            str_contains(
+                strtolower(
+                    $context->categoryName ?? ''
+                ),
+                'clothes'
+            )
         ) {
 
-            $matches[] = new MasterCategoryMatch(
-                masterCategoryId: 2,
-                masterCategoryName: 'GIRL FASHION',
-                confidence: 95,
-                reasons: [
-                    'category_match',
-                    'gender_match',
-                ]
+            $gender = $this->extractGender(
+                $context
             );
+
+            $matches = [];
+
+            if ($gender === 'boys') {
+
+                $matches[1] =
+                    new MasterCategoryMatch(
+                        masterCategoryId: 1,
+                        masterCategoryName: 'BOY FASHION',
+                        confidence: 95,
+                        reasons: [
+                            'gender_refinement',
+                        ]
+                    );
+            }
+
+            if ($gender === 'girls') {
+
+                $matches[2] =
+                    new MasterCategoryMatch(
+                        masterCategoryId: 2,
+                        masterCategoryName: 'GIRL FASHION',
+                        confidence: 95,
+                        reasons: [
+                            'gender_refinement',
+                        ]
+                    );
+            }
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | FOOTWEAR
-        |--------------------------------------------------------------------------
-        */
+        return array_values($matches);
+    }
 
-        if (
-            str_contains($subCategory, 'shoe')
-            || str_contains($subCategory, 'sneaker')
-            || str_contains($subCategory, 'boot')
-            || str_contains($subCategory, 'footwear')
+    private function extractGender(
+        ProductNavigationContext $context
+    ): ?string {
+
+        foreach (
+            $context->attributes
+            as $key => $values
         ) {
 
-            $matches[] = new MasterCategoryMatch(
-                masterCategoryId: 3,
-                masterCategoryName: 'FOOTWEAR',
-                confidence: 95,
-                reasons: [
-                    'subcategory_match',
-                ]
-            );
+            if (
+                str_starts_with(
+                    strtolower($key),
+                    'gender'
+                )
+            ) {
+
+                return strtolower(
+                    $values[0] ?? ''
+                );
+            }
         }
 
-        return $matches;
+        return null;
     }
 }

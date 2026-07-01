@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Domain\Catalog\Navigation\Services\BrandHierarchySynchronizer;
 
 class Brands extends Model
 {
@@ -22,4 +23,16 @@ class Brands extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+
+    protected static function booted()
+    {
+        static::saved(function (
+            Brands $brand
+        ) {
+            app(
+                BrandHierarchySynchronizer::class
+            )->sync($brand);
+        });
+    }
 }
