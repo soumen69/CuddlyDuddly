@@ -59,7 +59,8 @@ return [
         'token'           => env('SHIPROCKET_TOKEN'), // auto-generated token (store temporarily)
         'base_url'        => env('SHIPROCKET_BASE_URL', 'https://apiv2.shiprocket.in/v1/external'),
         'webhook_secret'  => env('SHIPROCKET_WEBHOOK_SECRET'),
-        'pickup_pincode'  => env('SHIPROCKET_PIN')
+        'pickup_pincode'  => env('SHIPROCKET_PIN'),
+        'pickup_location' => env('SHIPROCKET_PICKUP_LOCATION'),
     ],
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),

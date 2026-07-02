@@ -1,0 +1,193 @@
+<Doctype html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cancel Order</title>
+        <link rel="stylesheet" href="css/app.css">
+        <link rel="stylesheet" href="css/checkout.css">
+
+    </head>
+
+    <body>
+
+        <div class="orders-page">
+            <div class="container max-w-container mx-auto px-5">
+                <h1 class="cart-header-label">Cancel Order Request</h1>
+                <p class="text-sm text-[var(--color-silver)] mb-8">
+                    Please complete the form below to cancel your order. Cancellation requests are
+                    reviewed instantly or within a few hours depending on order status.
+                </p>
+
+                <!-- 1. Select Product(s) -->
+                <div class="cart-section-card">
+                    <div class="rr-section-head">
+                        <h4 class="text-sm font-medium text-black">Select Product(s)</h4>
+                        <span class="text-xs text-[var(--color-silver)]">Order #CD-982103 • Nov 12, 2023</span>
+                    </div>
+                    <h3 class="cart-header-label mb-0">Items Purchased</h3>
+
+                    <div class="rr-product-list">
+
+                        <div class="rr-product-row selected" onclick="toggleProduct(this)">
+                            <div class="order-item-img">
+                                <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=120&q=70"
+                                    alt="Chuck Taylor All Star" onerror="this.parentNode.style.background='#dbeafe'">
+                            </div>
+                            <div>
+                                <div class="order-item-name">Chuck Taylor All Star</div>
+                                <div class="order-item-meta">Size: One Size | Qty: 2</div>
+                                <div class="order-item-price">₹54.99</div>
+                            </div>
+                            <div class="rr-checkbox">
+                                <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                                    <path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="rr-product-row" onclick="toggleProduct(this)">
+                            <div class="order-item-img" style="background:#fce4ec;">
+                                <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=120&q=70"
+                                    alt="Chuck Taylor All Star" onerror="this.parentNode.style.background='#fce4ec'">
+                            </div>
+                            <div>
+                                <div class="order-item-name">Chuck Taylor All Star</div>
+                                <div class="order-item-meta">Size: One Size | Qty: 2</div>
+                                <div class="order-item-price">₹54.99</div>
+                            </div>
+                            <div class="rr-checkbox"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 2. Cancellation Type + Reason for Request -->
+                <div class="rr-mid-grid">
+
+                    <!-- Cancellation Type -->
+                    <div class="cart-section-card flex flex-col">
+                        <p class="cart-header-label">Cancellation Type</p>
+                        <div class="mt-3 flex flex-col justify-between h-full">
+
+                            <div class="rr-type-option selected" onclick="selectType(this)">
+                                <div class="rr-type-radio selected"></div>
+                                <div>
+                                    <div class="rr-type-title">Cancel Entire Order</div>
+                                    <div class="rr-type-sub">Get refund to original payment</div>
+                                </div>
+                            </div>
+
+                            <div class="rr-type-option" onclick="selectType(this)">
+                                <div class="rr-type-radio"></div>
+                                <div>
+                                    <div class="rr-type-title">Cancel Selected Product</div>
+                                    <div class="rr-type-sub">Get a new unit of the same item</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Reason for Request -->
+                    <div class="cart-section-card mb-0">
+                        <p class="cart-header-label">Reason for Request</p>
+                        <div class="mt-3">
+                            <label class="form-label">Primary Reason</label>
+                            <select class="form-input mb-4">
+                                <option value="" disabled selected>Ordered by mistake</option>
+                                <option>Found a better price</option>
+                                <option>Delivery too slow</option>
+                                <option>Changed my mind</option>
+                                <option>Duplicate order</option>
+                                <option>Other</option>
+                            </select>
+                            <label class="form-label mt-3">Comments (Optional)</label>
+                            <textarea class="form-input rr-textarea"
+                                placeholder="Tell us more about the issue..."></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 3. Refund Information + Delivery Status Notice -->
+                <div class="rr-bottom-grid">
+
+                    <!-- Refund Information -->
+                    <div class="co-refund-card">
+                        <div class="co-refund-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B45309"
+                                stroke-width="1.8" stroke-linecap="round">
+                                <rect x="2" y="5" width="20" height="14" rx="2" />
+                                <path d="M2 10h20" />
+                                <path d="M6 15h4" />
+                                <path d="M14 15h4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="co-refund-title">Refund Information</p>
+                            <div class="co-refund-row">
+                                Method: <strong>Original payment method</strong>
+                            </div>
+                            <div class="co-refund-row">
+                                Timeline: <strong>5-7 business days</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Status Notice -->
+                    <div class="co-notice-card">
+                        <div class="co-notice-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <path
+                                    d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="co-notice-head">
+                                <p class="co-notice-title">Delivery Status Notice</p>
+                                <span class="co-notice-badge">In Transit</span>
+                            </div>
+                            <p class="co-notice-text">
+                                This order has already been shipped. Cancellation may not be possible
+                                after dispatch. If the request fails, you may initiate a return upon delivery.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Submit -->
+                <div class="rr-submit-row">
+                    <button type="button" class="mcp-btn w-full sm:w-54">Submit Cancellation</button>
+                    <button type="button" class="mcp-btn mcp-btn-outline w-full sm:w-54">Keep Order</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function toggleProduct(row) {
+                row.classList.toggle('selected');
+                const cb = row.querySelector('.rr-checkbox');
+                cb.innerHTML = row.classList.contains('selected')
+                    ? '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                    : '';
+            }
+
+            function selectType(el) {
+                document.querySelectorAll('.rr-type-option').forEach(o => {
+                    o.classList.remove('selected');
+                    o.querySelector('.rr-type-radio').classList.remove('selected');
+                });
+                el.classList.add('selected');
+                el.querySelector('.rr-type-radio').classList.add('selected');
+            }
+        </script>
+    </body>
+
+    </html>

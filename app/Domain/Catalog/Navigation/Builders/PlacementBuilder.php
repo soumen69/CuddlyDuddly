@@ -90,12 +90,8 @@ class PlacementBuilder implements PlacementBuilderInterface
 
     public function build(ProductNavigationContext $context): array
     {
-
         $placements = [];
-
-        $masterCategoryMatches =
-            $this->masterCategoryResolver
-            ->resolve($context);
+        $masterCategoryMatches = $this->masterCategoryResolver->resolve($context);
 
         if (empty($masterCategoryMatches)) {
             return [];
@@ -106,10 +102,7 @@ class PlacementBuilder implements PlacementBuilderInterface
             $masterCategoryMatches
         );
 
-        $placements = array_merge(
-            $placements,
-            $this->buildBrandPlacements($context)
-        );
+        $placements = array_merge($placements, $this->buildBrandPlacements($context));
 
         $placements = collect($placements)
             ->unique(
@@ -122,21 +115,15 @@ class PlacementBuilder implements PlacementBuilderInterface
             $placements,
             fn($a, $b) => $b->confidence <=> $a->confidence
         );
-
         return $placements;
     }
 
     private function buildCategoryPlacements(ProductNavigationContext $context, array $masterCategoryMatches): array
     {
         $placements = [];
-        $index = collect(
-            $this->navigationIndexRepository->all()
-        )->keyBy(
-            'master_category_section_id'
-        );
+        $index = collect($this->navigationIndexRepository->all())->keyBy('master_category_section_id');
 
         foreach ($masterCategoryMatches as $match) {
-
             $sectionIds =
                 $this->categoryPlacementResolver
                 ->resolve(
@@ -167,32 +154,17 @@ class PlacementBuilder implements PlacementBuilderInterface
         return $placements;
     }
 
-    private function buildBrandPlacements(
-        ProductNavigationContext $context
-    ): array {
-
+    private function buildBrandPlacements(ProductNavigationContext $context): array
+    {
         $placements = [];
-
         if (! $context->brandId) {
             return [];
         }
 
-        $sectionIds =
-            $this->brandPlacementResolver
-            ->resolve(
-                $context->brandId
-            );
-
-        $index = collect(
-            $this->navigationIndexRepository->all()
-        )->keyBy(
-            'master_category_section_id'
-        );
-
+        $sectionIds = $this->brandPlacementResolver->resolve($context->brandId);
+        $index = collect($this->navigationIndexRepository->all())->keyBy('master_category_section_id');
         foreach ($sectionIds as $sectionId) {
-
             $node = $index->get($sectionId);
-
             if (! $node) {
                 continue;
             }

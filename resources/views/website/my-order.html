@@ -1,0 +1,266 @@
+<Doctype html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>My Order</title>
+        <link rel="stylesheet" href="css/app.css">
+        <link rel="stylesheet" href="css/checkout.css">
+
+    </head>
+
+    <body>
+
+        <div class="my-orders-page">
+            <div class="container max-w-container mx-auto px-5">
+                <!-- Greeting -->
+                <h1 class="text-xl lg:text-3xl xl:text-4xl font-normal text-black mb-2 flex items-center gap-2">Hello, Alex 👋</h1>
+                <p class="text-sm lg:text-base xl:text-lg text-black mb-5">Manage your orders easily</p>
+
+                <!-- Tabs -->
+                <div class="mo-tabs">
+                    <button class="mo-tab active" onclick="filterTab('all', this)">All Orders</button>
+                    <button class="mo-tab" onclick="filterTab('progress', this)">In Progress</button>
+                    <button class="mo-tab" onclick="filterTab('delivered', this)">Delivered</button>
+                    <button class="mo-tab" onclick="filterTab('cancelled', this)">Cancelled</button>
+                </div>
+
+                <!-- Orders list -->
+                <div id="ordersList">
+
+                    <!-- ORDER 1 — Delivered (expanded by default) -->
+                    <div class="mo-order-card expanded" data-status="delivered">
+                        <div class="mo-card-header" onclick="toggleCard(this.parentElement)">
+                            <div class="mo-thumb">
+                                <img src="images/WebsiteImages/category/baby-seater.webp"
+                                    alt="stroller" onerror="this.parentNode.style.background='#e8f0fe'">
+                            </div>
+                            <div class="mo-header-info-row">
+                                <div class="mo-header-info">
+                                    <div class="mo-id-row">
+                                        <span class="mo-id">ORD-882910</span>
+                                        <span class="order-status-delivered">Delivered</span>
+                                    </div>
+                                    <div class="cart-header-label">Baby Comfort Travel Stroller</div>
+                                    <div class="mo-date">Placed on October 24, 2023</div>
+                                </div>
+                                <div class="mo-total-col">
+                                    <div class="mo-total-label">Total Amount</div>
+                                    <div class="cart-header-label mo-total-val">₹1,240.00</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mo-card-body">
+                            <div class="mo-body-grid">
+                                <div class="mo-body-grid-item">
+                                    <div class="mo-section-label">Delivery Address</div>
+                                    <div class="mo-body-text">
+                                        Julian Voss-Andreae<br>
+                                        842 Highsmith Terrace, Apt 4B<br>
+                                        New York, NY 10012<br>
+                                        United States
+                                    </div>
+                                </div>
+                                <div class="mo-body-grid-item">
+                                    <div class="mo-section-label">Contact Information</div>
+                                    <div class="mo-body-text">
+                                        julian.voss@studio.com<br>
+                                        +1 (212) 555-0198
+                                    </div>
+                                </div>
+                                <div class="mo-body-grid-item">
+                                    <div class="mo-section-label">Quick Actions</div>
+                                    <div class="mo-quick-actions">
+                                        <button class="mcp-btn">
+                                            <img src="images/WebsiteImages/category/track-order.png" alt="Track" class="w-3">
+                                            Track Order
+                                        </button>
+                                        <button class="mcp-btn mcp-btn-outline">
+                                            <img src="images/WebsiteImages/category/download-dark.png" alt="Download" class="w-3">
+                                            Download Invoice
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mo-composition">
+                                <div class="mo-comp-title">Order Composition</div>
+                                <div class="mo-comp-item">
+                                    <div class="mo-comp-img">
+                                        <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=80&q=70"
+                                            alt="pram" onerror="this.parentNode.style.background='#f0f0f0'">
+                                    </div>
+                                    <div class="mo-comp-info">
+                                        <div class="mo-comp-name">Foldable Baby Pram Stroller</div>
+                                        <div class="mo-comp-meta">Size: 40mm | Material: Brushed Steel</div>
+                                    </div>
+                                    <div class="mo-comp-right">
+                                        <div class="mo-comp-qty">Qty: 1</div>
+                                        <div class="mo-comp-price">₹850.00</div>
+                                    </div>
+                                </div>
+                                <div class="mo-comp-item">
+                                    <div class="mo-comp-img" style="background:#fce4ec;">
+                                        <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=80&q=70"
+                                            alt="travel stroller" onerror="this.parentNode.style.background='#fce4ec'">
+                                    </div>
+                                    <div class="mo-comp-info">
+                                        <div class="mo-comp-name">Compact Travel Baby Stroller</div>
+                                        <div class="mo-comp-meta">Size: 40mm | Material: Brushed Steel</div>
+                                    </div>
+                                    <div class="mo-comp-right">
+                                        <div class="mo-comp-qty">Qty: 1</div>
+                                        <div class="mo-comp-price">₹850.00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ORDER 2 — In Progress -->
+                    <div class="mo-order-card" data-status="progress">
+                        <div class="mo-card-header" onclick="toggleCard(this.parentElement)">
+                            <div class="mo-thumb" style="background:#fff8e1;">
+                                <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=120&q=70"
+                                    alt="pushchair" onerror="this.parentNode.style.background='#fff8e1'">
+                            </div>
+                            <div class="mo-header-info-row">
+                                <div class="mo-header-info">
+                                    <div class="mo-id-row">
+                                        <span class="mo-id">ORD-882741</span>
+                                        <span class="order-status-out">In Progress</span>
+                                    </div>
+                                    <div class="mo-name">Deluxe Baby Pushchair</div>
+                                    <div class="mo-date">Placed on November 02, 2023</div>
+                                </div>
+                                <div class="mo-total-col">
+                                    <div class="mo-total-label">Total Amount</div>
+                                    <div class="mo-total-val">₹450.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mo-card-body">
+                            <div class="mo-body-grid">
+                                <div class="mo-body-grid-item">
+                                    <div class="mo-section-label">Delivery Address</div>
+                                    <div class="mo-body-text">Julian Voss-Andreae<br>842 Highsmith Terrace, Apt
+                                        4B<br>New York, NY 10012</div>
+                                </div>
+                                <div class="mo-body-grid-item">
+                                    <div class="mo-section-label">Contact Information</div>
+                                    <div class="mo-body-text">julian.voss@studio.com<br>+1 (212) 555-0198</div>
+                                </div>
+                                <div class="mo-body-grid-item">
+                                    <div class="mo-section-label">Quick Actions</div>
+                                    <div class="mo-quick-actions">
+                                        <button class="mcp-btn">
+                                            <img src="images/WebsiteImages/category/track-order.png" alt="Track" class="w-3">
+                                            Track Order
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mo-composition">
+                                <div class="mo-comp-title">Order Composition</div>
+                                <div class="mo-comp-item">
+                                    <div class="mo-comp-img">
+                                        <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=80&q=70"
+                                            alt="pushchair">
+                                    </div>
+                                    <div class="mo-comp-info">
+                                        <div class="mo-comp-name">Deluxe Baby Pushchair</div>
+                                        <div class="mo-comp-meta">Size: Standard | Material: Aluminium</div>
+                                    </div>
+                                    <div class="mo-comp-right">
+                                        <div class="mo-comp-qty">Qty: 1</div>
+                                        <div class="mo-comp-price">₹450.00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ORDER 3 — Cancelled -->
+                    <div class="mo-order-card" data-status="cancelled">
+                        <div class="mo-card-header" onclick="toggleCard(this.parentElement)">
+                            <div class="mo-thumb" style="background:#fde8e8;">
+                                <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=120&q=70"
+                                    alt="stroller set" onerror="this.parentNode.style.background='#fde8e8'">
+                            </div>
+                            <div class="mo-header-info-row">
+                                <div class="mo-header-info">
+                                    <div class="mo-id-row">
+                                        <span class="mo-id">ORD-882741</span>
+                                        <span class="order-status-cancelled">Cancelled</span>
+                                    </div>
+                                    <div class="mo-name">Lightweight Baby Stroller Set</div>
+                                    <div class="mo-date">Placed on November 02, 2023</div>
+                                </div>
+                                <div class="mo-total-col">
+                                    <div class="mo-total-label">Total Amount</div>
+                                    <div class="mo-total-val">₹450.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mo-card-body">
+                            <div class="mo-body-grid">
+                                <div class="mo-body-grid-item">
+                                    <div class="mo-section-label">Delivery Address</div>
+                                    <div class="mo-body-text">Julian Voss-Andreae<br>842 Highsmith Terrace, Apt
+                                        4B<br>New York, NY 10012</div>
+                                </div>
+                                <div class="mo-body-grid-item">
+                                    <div class="mo-section-label">Contact Information</div>
+                                    <div class="mo-body-text">julian.voss@studio.com<br>+1 (212) 555-0198</div>
+                                </div>
+                                <div class="mo-body-grid-item">
+                                    <div class="mo-section-label">Quick Actions</div>
+                                    <div class="mo-quick-actions">
+                                        <button class="mcp-btn"><img src="images/WebsiteImages/category/refresh.png" alt="Reorder"> Reorder</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mo-composition">
+                                <div class="mo-comp-title">Order Composition</div>
+                                <div class="mo-comp-item">
+                                    <div class="mo-comp-img">
+                                        <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=80&q=70"
+                                            alt="stroller set">
+                                    </div>
+                                    <div class="mo-comp-info">
+                                        <div class="mo-comp-name">Lightweight Baby Stroller Set</div>
+                                        <div class="mo-comp-meta">Size: Compact | Material: Carbon Fibre</div>
+                                    </div>
+                                    <div class="mo-comp-right">
+                                        <div class="mo-comp-qty">Qty: 1</div>
+                                        <div class="mo-comp-price">₹450.00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- View All -->
+                <button class="mcp-btn w-full">View All</button>
+            </div>
+        </div>
+
+        <script>
+            function toggleCard(card) {
+                card.classList.toggle('expanded');
+            }
+            function filterTab(status, btn) {
+                document.querySelectorAll('.mo-tab').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.mo-order-card').forEach(card => {
+                    card.style.display = (status === 'all' || card.dataset.status === status) ? '' : 'none';
+                });
+            }
+        </script>
+    </body>
+
+    </html>

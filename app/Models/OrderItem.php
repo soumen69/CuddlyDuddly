@@ -7,15 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 class OrderItem extends Model
 {
     protected $fillable = [
+
         'order_id',
+        'seller_id',
+        'shipment_id',
         'product_id',
+        'product_variant_id',
         'quantity',
         'price',
+        'subtotal',
         'commission_percent',
         'commission_amount',
+        'commission_snapshot',
         'seller_amount',
-        'subtotal',
-        'settlement_status'
+        'settlement_status',
+        'item_status',
+        'return_status',
+        'replacement_status',
+        'cancellation_status',
+        'delivered_at',
+        'cancelled_at',
+        'returned_at',
+        'metadata'
     ];
 
     protected $casts = [
@@ -23,7 +36,17 @@ class OrderItem extends Model
         'seller_amount'     => 'float',
         'subtotal'          => 'float',
         'commission_percent' => 'float',
+        'metadata' => 'array',
+        'delivered_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'returned_at' => 'datetime',
     ];
+
+
+    public function shipment()
+    {
+        return $this->belongsTo(Shipment::class);
+    }
 
     // ============================= RELATIONS =============================
 
@@ -35,6 +58,14 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Products::class, 'product_id');
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(
+            ProductVariant::class,
+            'product_variant_id'
+        );
     }
 
     public function seller()
@@ -67,5 +98,26 @@ class OrderItem extends Model
             'commission_amount' => $commission,
             'seller_amount'     => $subtotal - $commission,
         ]);
+    }
+
+    public function cancellations()
+    {
+        return $this->hasMany(
+            OrderCancellation::class
+        );
+    }
+
+    public function returns()
+    {
+        return $this->hasMany(
+            OrderReturn::class
+        );
+    }
+
+    public function replacements()
+    {
+        return $this->hasMany(
+            OrderReplacement::class
+        );
     }
 }

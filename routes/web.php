@@ -49,7 +49,7 @@ use App\Http\Controllers\Website\{
 };
 
 use App\Models\Cart;
-
+use App\Http\Controllers\Webhooks\ShiprocketWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,6 +88,7 @@ Route::middleware('auth.customer')->group(function () {
     Route::post('/checkout/save-address', [CheckoutController::class, 'saveAddress']);
     Route::post('/review/store', [ReviewController::class, 'CustomerReview'])->name('review.store');
     Route::get('/order-history', [CheckoutController::class, 'orderHistory'])->name('order-history');
+    Route::post('/webhooks/shiprocket', ShiprocketWebhookController::class)->name('webhooks.shiprocket');
 });
 
 Route::get('/', [PagesController::class, 'index'])->name('home');
@@ -205,105 +206,6 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
     Route::post('inventory/{inventory}/reserve', [InventoryController::class, 'reserveStock'])->name('admin.inventory.reserve');
     Route::post('inventory/{inventory}/release', [InventoryController::class, 'releaseStock'])->name('admin.inventory.release');
     Route::post('inventory/{inventory}/adjust', [InventoryController::class, 'adjustStock'])->name('admin.inventory.adjust');
-
-
-    //bulk upload
-    // Route::get('products/show-bulk-template', [BulkTemplateController::class, 'showWizard'])->name('bulk.showWizard');
-    // Route::post('products/get-bulk-template', [BulkTemplateController::class, 'generateTemplate'])->name('admin.generate.template');
-    // Route::post('bulk/subcategories', [ProductController::class, 'bulkSubcategories']);
-
-
-
-
-    // Route::prefix('admin/bulk')
-    //     ->name('admin.bulk.')
-    //     ->group(function () {
-
-    //         Route::get('/upload', [BulkUploadController::class, 'index'])
-    //             ->name('upload.index');
-
-    //         Route::post('/upload/process', [BulkUploadController::class, 'process'])
-    //             ->name('upload.process');
-
-    //         Route::get('/batches', [BulkUploadController::class, 'batches'])
-    //             ->name('batches.index');
-
-    //         Route::get('/batch/{batchId}', [BulkUploadController::class, 'review'])
-    //             ->name('batch.review');
-
-    //         Route::post('/batch/{productId}/approve', [BulkUploadController::class, 'approve'])
-    //             ->name('batch.approve');
-
-    //         Route::post('/batch/{productId}/reject', [BulkUploadController::class, 'reject'])
-    //             ->name('batch.reject');
-
-    //         Route::post('/batch/{batchId}/commit', [BulkUploadController::class, 'commit'])
-    //             ->name('batch.commit');
-    //     });
-
-    // Route::prefix('admin/bulk/images')
-    //     ->name('admin.bulk.images.')
-    //     ->group(function () {
-
-    //         Route::get(
-    //             '/product/{productId}/details',
-    //             [BulkImageController::class, 'productDetails']
-    //         )->name('product.details');
-
-    //         Route::post(
-    //             '/ajax-upload',
-    //             [BulkImageController::class, 'ajaxUpload']
-    //         )->name('ajax.upload');
-
-    //         Route::get(
-    //             '/{batchId}',
-    //             [BulkImageController::class, 'gateway']
-    //         )->name('gateway');
-
-    //         Route::get(
-    //             '/{batchId}/zip-template',
-    //             [BulkImageController::class, 'downloadZipTemplate']
-    //         )->name('zip.template');
-
-    //         Route::post(
-    //             '/{batchId}/zip-upload',
-    //             [BulkImageController::class, 'uploadZip']
-    //         )->name('zip.upload');
-
-    //         Route::get(
-    //             '/{batchId}/manual',
-    //             [BulkImageController::class, 'manual']
-    //         )->name('manual');
-
-    //         Route::post(
-    //             '/{batchId}/manual-upload',
-    //             [BulkImageController::class, 'manualUpload']
-    //         )->name('manual.upload');
-
-    //         Route::get(
-    //             '/{batchId}/review',
-    //             [BulkImageController::class, 'review']
-    //         )->name('review');
-
-    //         Route::post(
-    //             '/{batchId}/commit',
-    //             [BulkImageController::class, 'commitImages']
-    //         )->name('commit');
-
-    //         Route::post(
-    //             '/{batchId}/skip',
-    //             [BulkImageController::class, 'skipForNow']
-    //         )->name('skip');
-    //     });
-
-
-
-
-
-
-
-
-
 
     // Orders, Returns, Cancellations
     Route::resource('orders', OrderController::class)->names('admin.orders');

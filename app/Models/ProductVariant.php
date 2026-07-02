@@ -58,4 +58,28 @@ class ProductVariant extends Model
             'variant_id'
         );
     }
+
+    public function getImagePathAttribute(): ?string
+    {
+        foreach ($this->variantAttributeValues as $variantAttribute) {
+
+            $image = $variantAttribute->attributeValue?->images
+                ->where('product_id', $this->product_id)
+                ->where('is_primary', true)
+                ->first();
+
+            if ($image) {
+                return $image->image_path;
+            }
+        }
+
+        return $this->product?->primaryImage?->image_path;
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        return $this->image_path
+            ? asset('storage/' . $this->image_path)
+            : asset('images/product-placeholder.png');
+    }
 }

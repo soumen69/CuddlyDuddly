@@ -3,59 +3,75 @@
 namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SyncShipmentTrackingJob;
+use App\Models\Shipment;
 use Illuminate\Http\Request;
-use App\Models\Order;
-use App\Models\ShippingLog;
+use Illuminate\Support\Facades\Log;
 
 class ShiprocketWebhookController extends Controller
 {
-    public function handle(Request $request)
+    public function __invoke(Request $request)
     {
-        $data = $request->all();
-        $event = $data['event'] ?? 'unknown';
-        $orderId = $data['data']['order_id'] ?? null;
-        $awb     = $data['data']['awb'] ?? null;
+        $this->verifySignature($request);
 
-        // Log all webhooks
-        ShippingLog::create([
-            'order_id'   => $orderId,
-            'event_name' => $event,
-            'payload'    => $data
+        Log::info('Shiprocket Webhook', $request->all());
+
+        $awb = data_get($request->all(), 'awb')
+            ?? data_get($request->all(), 'data.awb')
+            ?? data_get($request->all(), 'tracking_data.awb_code');
+
+        if (blank($awb)) {
+            return response()->json([
+                'message' => 'Webhook received.'
+            ]);
+        }
+
+        $shipment = Shipment::query()
+            ->where('awb_number', $awb)
+            ->first();
+
+        if (!$shipment) {
+            return response()->json([
+                'message' => 'Shipment not found.'
+            ]);
+        }
+
+        SyncShipmentTrackingJob::dispatch(
+            $shipment->id
+        );
+
+        return response()->json([
+            'message' => 'Tracking synchronization queued.'
         ]);
+    }
 
-        if (!$orderId) {
-            return response()->json(['status' => 'order_id_missing'], 422);
+    protected function verifySignature(Request $request): void
+    {
+        $configured = config(
+            'services.shiprocket.webhook_secret'
+        );
+
+        if (blank($configured)) {
+            return;
         }
 
-        $order = Order::with('shipment')->find($orderId);
-        if (!$order || !$order->shipment) {
-            return response()->json(['status' => 'shipment_missing'], 404);
-        }
+        $signature = $request->header(
+            'X-Shiprocket-Signature'
+        );
 
-        $shipment = $order->shipment;
+        $expected = hash_hmac(
+            'sha256',
+            $request->getContent(),
+            $configured
+        );
 
-        return match ($event) {
-            'AWB Assigned'      => $shipment->update(['status' => 'awb_assigned', 'awb_number' => $awb]),
-            'Pickup Scheduled'  => $shipment->update(['status' => 'pickup_scheduled']),
-            'In Transit'        => $shipment->update(['status' => 'in_transit']),
-            'Out For Delivery'  => $shipment->update(['status' => 'out_for_delivery']),
-            'Delivered'         => $shipment->update([
-                'status' => 'delivered',
-                'delivered_at' => now(),
-                'settlement_status' => 'on_hold',
-                'hold_until' => now()->addDays(7),
-            ]),
-            'RTO Initiated'     => $shipment->update([
-                'status' => 'rto_initiated',
-                'rto_initiated_at' => now(),
-            ]),
-            'RTO Delivered'     => $shipment->update([
-                'status' => 'rto_delivered',
-                'rto_delivered_at' => now(),
-                'settlement_status' => 'cancelled'
-            ]),
-            'Cancelled'         => $shipment->update(['status' => 'cancelled']),
-            default             => response()->json(['status' => 'ignored']),
-        };
+        abort_unless(
+            hash_equals(
+                $expected,
+                (string) $signature
+            ),
+            401,
+            'Invalid webhook signature.'
+        );
     }
 }

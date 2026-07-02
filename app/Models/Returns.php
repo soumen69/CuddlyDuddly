@@ -15,11 +15,20 @@ class Returns extends Model
         'return_number',
         'order_id',
         'order_item_id',
+        'shipment_id',
+        'seller_id',
         'user_id',
         'reason',
         'status',
-        'refund_method',
         'refund_amount',
+        'pickup_awb',
+        'pickup_status',
+        'inspection_status',
+        'metadata'
+    ];
+
+    protected $casts = [
+        'metadata' => 'array'
     ];
 
     // 🔗 Relationships

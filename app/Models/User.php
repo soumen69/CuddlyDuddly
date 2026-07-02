@@ -80,4 +80,25 @@ class User extends Authenticatable
         return $this->hasOne(ShippingAddress::class, 'user_id')
             ->where('is_default', 1);
     }
+
+    public function orderCancellations()
+    {
+        return $this->hasMany(
+            OrderCancellation::class
+        );
+    }
+
+    public function orderReturns()
+    {
+        return $this->hasMany(
+            OrderReturn::class
+        );
+    }
+
+    public function orderReplacements()
+    {
+        return $this->hasMany(
+            OrderReplacement::class
+        );
+    }
 }

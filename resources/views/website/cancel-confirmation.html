@@ -1,0 +1,178 @@
+<Doctype html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cancel Order</title>
+        <link rel="stylesheet" href="css/app.css">
+        <link rel="stylesheet" href="css/checkout.css">
+
+    </head>
+
+    <body>
+
+        <div class="orders-page">
+            <div class="container max-w-container mx-auto px-5">
+                <div class="w-full max-w-[600px] mx-auto mb-6">
+                    <!-- ── BOX 1: Cancelled icon + message ── -->
+                    <div class="rs-box1">
+                        <div class="rs-success-icon bg-[#F97386]/10">
+                            <img src="images/WebsiteImages/category/cross-circle.png" alt="Cancelled" class="w-6 h-6">
+                        </div>
+                        <h1 class="rs-success-title">Order Cancelled Successfully</h1>
+                        <p class="rs-success-sub">
+                            Your order has been cancelled successfully and the cancellation request has been processed.
+                        </p>
+                    </div>
+
+                    <!-- ── BOX 2: Meta strip ── -->
+                    <div class="rs-box2">
+                        <div>
+                            <div class="rs-meta-label">Request ID</div>
+                            <div class="rs-meta-value">#RT982103</div>
+                        </div>
+                        <div>
+                            <div class="rs-meta-label">Order ID</div>
+                            <div class="rs-meta-value">#CD-982103</div>
+                        </div>
+                        <div>
+                            <div class="rs-meta-label">Submitted Date</div>
+                            <div class="rs-meta-value">Nov 14, 2023</div>
+                        </div>
+                        <div>
+                            <div class="rs-meta-label">Status</div>
+                            <span class="cs-badge-cancelled">Cancelled</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Return Item box ── -->
+                <div class="rs-item-box">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="cart-header-label mb-0">Return Item</p>
+                        <span class="cs-badge-item-cancelled">Cancelled</span>
+                    </div>
+
+                    <div class="rs-item-row">
+                        <div class="rs-item-img">
+                            <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=120&q=70"
+                                alt="Chuck Taylor All Star" onerror="this.parentNode.style.background='#dbeafe'">
+                        </div>
+                        <div>
+                            <div class="rs-item-name">Chuck Taylor All Star</div>
+                            <div class="rs-item-meta">Size: One Size | Qty: 2</div>
+                            <div class="rs-item-price">₹54.99</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ── Bottom grid: Cancellation Status | Cancellation Details + Refund ── -->
+                <div class="rs-bottom-grid">
+
+                    <!-- Left: Cancellation Status stepper -->
+                    <div class="cart-section-card mb-0">
+                        <p class="cart-header-label">Cancellation Status</p>
+                        <div class="rs-stepper">
+
+                            <!-- 1. Order Placed — done -->
+                            <div class="rs-step-row">
+                                <div class="rs-step-col">
+                                    <div class="rs-step-dot done"></div>
+                                    <div class="rs-step-line done"></div>
+                                </div>
+                                <div class="rs-step-body">
+                                    <div class="rs-step-title">Order Placed</div>
+                                    <div class="rs-step-sub">Nov 20, 2023</div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Cancellation Requested — done -->
+                            <div class="rs-step-row">
+                                <div class="rs-step-col">
+                                    <div class="rs-step-dot done"></div>
+                                    <div class="rs-step-line done"></div>
+                                </div>
+                                <div class="rs-step-body">
+                                    <div class="rs-step-title">Cancellation Requested</div>
+                                    <div class="rs-step-sub">Nov 22, 2023</div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Cancellation Confirmed — active -->
+                            <div class="rs-step-row">
+                                <div class="rs-step-col">
+                                    <div class="rs-step-dot active"></div>
+                                    <div class="rs-step-line"></div>
+                                </div>
+                                <div class="rs-step-body rs-step-active-pill">
+                                    <div class="rs-step-title">Cancellation Confirmed</div>
+                                    <span class="rs-step-sub">Nov 22, 2023</span>
+                                </div>
+                            </div>
+
+                            <!-- 4. Refund Initiated — inactive -->
+                            <div class="rs-step-row">
+                                <div class="rs-step-col">
+                                    <div class="rs-step-dot"></div>
+                                </div>
+                                <div class="rs-step-body">
+                                    <div class="rs-step-title muted">Refund Initiated</div>
+                                    <div class="rs-step-sub muted">Pending</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Right: Cancellation Details + Refund Information -->
+                    <div class="rs-bottom-right-grid">
+
+                        <!-- Cancellation Details -->
+                        <div class="cart-section-card mb-0">
+                            <p class="cart-header-label">Cancellation Details</p>
+                            <div class="mt-2">
+                                <div class="co-detail-row">
+                                    <span class="co-detail-label">Reason</span>
+                                    <span class="co-detail-value">Ordered by mistake</span>
+                                </div>
+                                <div class="co-detail-row">
+                                    <span class="co-detail-label">Requested by</span>
+                                    <span class="co-detail-value">Customer</span>
+                                </div>
+                                <div class="co-detail-row">
+                                    <span class="co-detail-label">Status</span>
+                                    <span class="co-detail-value confirmed">Confirmed</span>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="cart-section-card">
+                            <p class="cart-header-label">Refund Information</p>
+                            <div class="co-detail-row">
+                                <span class="co-detail-label">Amount</span>
+                                <span class="co-refund-amount">$32.00</span>
+                            </div>
+                            <div class="co-detail-row">
+                                <span class="co-detail-label">Method</span>
+                                <span class="co-detail-value">Visa ending in 4242</span>
+                            </div>
+                            <p class="co-refund-hint">Refund expected within 3–5 business days</p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ── Actions ── -->
+                <div class="rs-submit-row mt-10">
+                    <button type="button" class="mcp-btn w-full sm:w-44 md:w-58">Continue Shopping</button>
+                    <button type="button" class="mcp-btn mcp-btn-outline w-full sm:w-44 md:w-58">Back to My Orders</button>
+                    <button type="button" class="mcp-btn mcp-btn-outline w-full sm:w-44 md:w-58">Reorder Product</button>
+                </div>
+            </div>
+        </div>
+    </body>
+
+    </html>

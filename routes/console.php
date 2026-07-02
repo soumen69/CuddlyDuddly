@@ -11,3 +11,12 @@ Schedule::command(AutoSettleOrders::class)->dailyAt('02:00');
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 });
+
+Schedule::command('logistics:sync')
+    ->everyFiveMinutes();
+
+Schedule::command('mock:courier-tick')
+    ->everyMinute();
+
+Schedule::command('orders:auto-settle')
+    ->daily();

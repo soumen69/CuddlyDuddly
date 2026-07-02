@@ -40,23 +40,62 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function shipment()
+    public function shipments()
     {
-        return $this->hasOne(Shipment::class);
+        return $this->hasMany(
+            Shipment::class,
+            'order_id'
+        );
     }
 
     public function shipmentLogs()
     {
-        return $this->hasMany(ShippingLog::class, 'order_id');
+        return $this->hasManyThrough(
+            ShippingLog::class,
+            Shipment::class,
+            'order_id',
+            'shipment_id',
+            'id',
+            'id'
+        );
     }
-    // public function orderItems()
-    // {
-    //     return $this->hasMany(OrderItem::class, 'order_id');
-    // }
+
+    public function logs()
+    {
+        return $this->hasManyThrough(
+            ShippingLog::class,
+            Shipment::class,
+            'order_id',
+            'shipment_id',
+            'id',
+            'id'
+        )->latest();
+    }
 
     // Order has many Products through OrderItems
     public function products()
     {
         return $this->belongsToMany(Products::class, 'order_items', 'order_id', 'product_id');
+    }
+
+    public function cancellations()
+    {
+        return $this->hasMany(
+            OrderCancellation::class
+        );
+    }
+
+    public function returns()
+    {
+        return $this->hasMany(
+            OrderReturn::class
+        );
+    }
+
+    public function replacements()
+    {
+        return $this->hasMany(
+            OrderReplacement::class
+        );
     }
 }

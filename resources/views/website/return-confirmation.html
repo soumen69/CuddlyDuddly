@@ -1,0 +1,242 @@
+<Doctype html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Return confirmation</title>
+        <link rel="stylesheet" href="css/app.css">
+        <link rel="stylesheet" href="css/checkout.css">
+
+    </head>
+
+    <body>
+
+        <div class="orders-page">
+            <div class="container max-w-container mx-auto px-5">
+                <div class="w-full max-w-[600px] mx-auto mb-6">
+                    <!-- ── BOX 1: Success message ── -->
+                    <div class="rs-box1">
+                        <div class="rs-success-icon">
+                            <img src="images/WebsiteImages/category/correct.png" alt="correct" class="w-5">
+                        </div>
+                        <h1 class="rs-success-title">Return Request Submitted Successfully</h1>
+                        <p class="rs-success-sub">
+                            Your request has been received and pickup will be scheduled soon.
+                        </p>
+                    </div>
+
+                    <!-- ── BOX 2: Meta info strip ── -->
+                    <div class="rs-box2">
+                        <div>
+                            <div class="rs-meta-label">Request ID</div>
+                            <div class="rs-meta-value">#RT962103</div>
+                        </div>
+                        <div>
+                            <div class="rs-meta-label">Order ID</div>
+                            <div class="rs-meta-value">#CD-982103</div>
+                        </div>
+                        <div>
+                            <div class="rs-meta-label">Submitted Date</div>
+                            <div class="rs-meta-value">Nov 14, 2023</div>
+                        </div>
+                        <div>
+                            <div class="rs-meta-label">Status</div>
+                            <span class="rs-status-badge">Pickup Scheduled</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Return Item box (light bg, border-bottom per item) ── -->
+                <div class="rs-item-box">
+                    <p class="cart-header-label mb-4">Return Item</p>
+
+                    <div class="rs-item-row">
+                        <div class="rs-item-img">
+                            <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=120&q=70"
+                                alt="Chuck Taylor All Star" onerror="this.parentNode.style.background='#dbeafe'">
+                        </div>
+                        <div>
+                            <div class="rs-item-name">Chuck Taylor All Star</div>
+                            <div class="rs-item-meta">Size: One Size | Qty: 2</div>
+                            <div class="rs-item-price">₹54.99</div>
+                        </div>
+                    </div>
+                    <div class="rs-item-row">
+                        <div class="rs-item-img">
+                            <img src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=120&q=70"
+                                alt="Chuck Taylor All Star" onerror="this.parentNode.style.background='#dbeafe'">
+                        </div>
+                        <div>
+                            <div class="rs-item-name">Chuck Taylor All Star</div>
+                            <div class="rs-item-meta">Size: One Size | Qty: 2</div>
+                            <div class="rs-item-price">₹54.99</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ── Bottom grid: Next Steps | Address + Info ── -->
+                <div class="rs-bottom-grid">
+
+                    <!-- Next Steps -->
+                    <div class="cart-section-card mb-0">
+                        <p class="cart-header-label">Next Steps</p>
+                        <div class="rs-stepper">
+
+                            <!-- 1. Request Submitted — DONE -->
+                            <div class="rs-step-row">
+                                <div class="rs-step-col">
+                                    <div class="rs-step-icon done">
+                                        <!-- checkmark -->
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white"
+                                            stroke-width="2.5" stroke-linecap="round">
+                                            <path d="M20 6L9 17l-5-5" />
+                                        </svg>
+                                    </div>
+                                    <div class="rs-step-line"></div>
+                                </div>
+                                <div class="rs-step-body">
+                                    <div class="rs-step-title">Request Submitted</div>
+                                    <div class="rs-step-sub">Nov 14, 2023, 02:45 PM</div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Pickup Scheduled — ACTIVE -->
+                            <div class="rs-step-row">
+                                <div class="rs-step-col">
+                                    <div class="rs-step-icon done">
+                                        <!-- calendar/clock icon -->
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white"
+                                            stroke-width="2.2" stroke-linecap="round">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                                            <line x1="16" y1="2" x2="16" y2="6" />
+                                            <line x1="8" y1="2" x2="8" y2="6" />
+                                            <line x1="3" y1="10" x2="21" y2="10" />
+                                        </svg>
+                                    </div>
+                                    <div class="rs-step-line"></div>
+                                </div>
+                                <div class="rs-step-body">
+                                    <div class="rs-step-title">Pickup Scheduled</div>
+                                    <div class="rs-step-sub">Estimated for Nov 16, 2023</div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Pickup Completed — INACTIVE -->
+                            <div class="rs-step-row">
+                                <div class="rs-step-col">
+                                    <div class="rs-step-icon">
+                                        <!-- truck icon -->
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white"
+                                            stroke-width="2.2" stroke-linecap="round">
+                                            <rect x="1" y="3" width="15" height="13" rx="1" />
+                                            <path d="M16 8h4l3 5v4h-7V8z" />
+                                            <circle cx="5.5" cy="18.5" r="2.5" />
+                                            <circle cx="18.5" cy="18.5" r="2.5" />
+                                        </svg>
+                                    </div>
+                                    <div class="rs-step-line"></div>
+                                </div>
+                                <div class="rs-step-body">
+                                    <div class="rs-step-title muted">Pickup Completed</div>
+                                    <div class="rs-step-sub muted">Waiting for courier</div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Seller Inspection — INACTIVE -->
+                            <div class="rs-step-row">
+                                <div class="rs-step-col">
+                                    <div class="rs-step-icon">
+                                        <!-- magnifier/inspect icon -->
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white"
+                                            stroke-width="2.2" stroke-linecap="round">
+                                            <circle cx="11" cy="11" r="7" />
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                        </svg>
+                                    </div>
+                                    <div class="rs-step-line"></div>
+                                </div>
+                                <div class="rs-step-body">
+                                    <div class="rs-step-title muted">Seller Inspection</div>
+                                    <div class="rs-step-sub muted">Usually within 48 hours of receipt</div>
+                                </div>
+                            </div>
+
+                            <!-- 5. Refund Processed — INACTIVE -->
+                            <div class="rs-step-row">
+                                <div class="rs-step-col">
+                                    <div class="rs-step-icon">
+                                        <!-- refund/return money icon -->
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white"
+                                            stroke-width="2.2" stroke-linecap="round">
+                                            <path d="M12 2a10 10 0 1 0 10 10" />
+                                            <path d="M16 2h6v6" />
+                                            <path d="M22 2L12 12" />
+                                            <path d="M12 8v4l3 3" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="rs-step-body">
+                                    <div class="rs-step-title muted">Refund Processed</div>
+                                    <div class="rs-step-sub muted">To your original payment method</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Right col -->
+                    <div class="rs-bottom-right-grid ">
+
+                        <!-- Pickup Address -->
+                        <div class="cart-section-card mb-0">
+                            <div class="flex items-center justify-between mb-4">
+                                <p class="cart-header-label mb-0">Pickup Address</p>
+                                <a href="#!" class="add-address-btn">Change Address</a>
+                            </div>
+                            <div class="rs-addr-row">
+                                <div class="rs-addr-icon mt-1">
+                                    <img src="images/WebsiteImages/category/map-outline-pink.png" alt="map icon" class="w-3">
+                                </div>
+                                <div>
+                                    <div class="cart-address-card-name">Emily Thompson</div>
+                                    <div class="cart-address-card-line">
+                                        124 Willow Creek Dr, Apt 4B<br>Austin, TX 78701
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Important Information -->
+                        <div class="rs-info-card">
+                            <div class="rs-info-icon">
+                                <img src="images/WebsiteImages/category/info-pink-outline.png" alt="info icon" class="w-4">
+                            </div>
+                            <div>
+                                <p class="cart-header-label">Important Information</p>
+                                <p class="rs-info-text">
+                                    Refunds are typically processed within 5–7 business days after
+                                    the product passes inspection. <br>
+                                    Please ensure the product is in its original packaging. View
+                                    <a href="#!" class="rs-info-link">Return Policy</a>
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ── Actions ── -->
+                <div class="rs-submit-row">
+                    <button type="button" class="mcp-btn px-12 w-full sm:w-58">Track Request</button>
+                    <button type="button" class="mcp-btn mcp-btn-outline px-12 w-full sm:w-58">Back to My Orders</button>
+                </div>
+
+            </div>
+        </div>
+
+
+    </body>
+
+    </html>

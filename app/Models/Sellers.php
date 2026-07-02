@@ -11,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Sellers extends Authenticatable
 {
-    use HasFactory, HasRoles, SoftDeletes;
+    use HasFactory, HasRoles, SoftDeletes, HasApiTokens;
 
     protected $guard = 'seller';
     protected $table = 'sellers';
@@ -22,19 +22,15 @@ class Sellers extends Authenticatable
         'name',
         'contact_person',
         'email',
-        'phone',
+        'mobile',
         'compliance_status',
         'logo',
+        'avatar',
         'commission_rate',
         'is_active',
         'is_onboard',
     ];
 
-    /**
-     * Get the route key for the model.
-     *
-     * @return string
-     */
     public function getRouteKeyName()
     {
         return 'slug';
@@ -50,13 +46,6 @@ class Sellers extends Authenticatable
             }
         });
     }
-
-    // protected $hidden = ['password', 'remember_token'];
-
-    // protected $casts = [
-    //     'documents' => 'array',
-    //     'is_active' => 'boolean',
-    // ];
 
 
     public function products()
@@ -99,6 +88,7 @@ class Sellers extends Authenticatable
         return $this->permissions()->whereIn('slug', $slugs)->isNotEmpty();
     }
 
+
     public function businessDetail()
     {
         return $this->hasOne(SellerBusinessDetail::class, 'seller_id');
@@ -124,4 +114,33 @@ class Sellers extends Authenticatable
         return $this->hasOne(SellerSupplierDetail::class, 'seller_id');
     }
 
+    public function documents()
+    {
+        return $this->hasMany(
+            SellerDocument::class,
+            'seller_id',
+            'id'
+        );
+    }
+
+    public function cancellations()
+    {
+        return $this->hasMany(
+            OrderCancellation::class
+        );
+    }
+
+    public function returns()
+    {
+        return $this->hasMany(
+            OrderReturn::class
+        );
+    }
+
+    public function replacements()
+    {
+        return $this->hasMany(
+            OrderReplacement::class
+        );
+    }
 }

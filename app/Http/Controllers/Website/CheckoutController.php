@@ -349,10 +349,14 @@ class CheckoutController extends Controller
 
                 OrderItem::create([
                     'order_id' => $order->id,
+                    'seller_id' => $sellerId,
+                    'shipment_id' => $shipment->id,
                     'product_id' => $item->product_id,
+                    'product_variant_id' => $item->variant_id,
                     'quantity' => $item->quantity,
                     'price' => $price,
                     'subtotal' => $price * $item->quantity,
+                    'item_status' => 'placed'
                 ]);
 
                 // 🔻 REDUCE STOCK
@@ -370,9 +374,10 @@ class CheckoutController extends Controller
 
             session()->forget('pending_order');
 
-            // ✅ LOAD RELATIONS (FIXED)
             $order->load([
-                'items.product.images',
+                'items.product.primaryImage',
+                'items.product.primaryVariantImage',
+                'items.variant.variantAttributeValues.attributeValue',
                 'shippingAddress'
             ]);
 
@@ -404,8 +409,49 @@ class CheckoutController extends Controller
         ];
     }
 
-    public function orderHistory()
+
+    public function orderHistory(Request $request)
     {
-        return view('website.order-history');
+        $orders = Order::query()
+            ->where('user_id', auth('customer')->id())
+            ->with([
+                'shipment',
+                'items.product.primaryImage',
+                'items.variant.variantAttributeValues.attributeValue.images',
+                'items.variant.variantAttributeValues.attributeValue.attribute',
+            ])
+
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $q->where('order_number', 'like', "%{$request->search}%");
+            })
+
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('order_status', $request->status);
+            })
+
+            ->when($request->filled('period'), function ($q) use ($request) {
+
+                $days = match ($request->period) {
+                    '30' => 30,
+                    '60' => 60,
+                    '90' => 90,
+                    default => null,
+                };
+
+                if ($days) {
+                    $q->where('created_at', '>=', now()->subDays($days));
+                }
+            })
+
+            ->when($request->sort === 'oldest', function ($q) {
+                $q->oldest();
+            }, function ($q) {
+                $q->latest();
+            })
+
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('website.order-history', compact('orders'));
     }
 }

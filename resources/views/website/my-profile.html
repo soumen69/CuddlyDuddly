@@ -1,0 +1,569 @@
+<Doctype html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>My Profile</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:ital,wght@0,400..800;1,400..800&display=swap"
+            rel="stylesheet">
+        <link rel="stylesheet" href="css/app.css">
+        <link rel="stylesheet" href="css/checkout.css">
+
+    </head>
+
+    <body>
+
+        <div class="my-orders-page">
+            <div class="container max-w-container mx-auto px-5">
+
+                <!-- ── Profile Header ── -->
+                <div class="prof-header">
+                    <div class="flex items-center gap-3">
+                        <div class="prof-avatar-wrap">
+                            <div class="prof-avatar">
+                                <img id="profileAvatarImg" src="https://i.pravatar.cc/96?img=11" alt="Alex Johnson"
+                                    onerror="this.parentNode.style.background='#ddd'">
+                            </div>
+                            <!-- <div class="prof-online"></div> -->
+                            <input type="file" id="avatarInput" accept="image/*" style="display:none;">
+                            <div class="prof-camera-btn" onclick="document.getElementById('avatarInput').click()">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white"
+                                    stroke-width="2" stroke-linecap="round">
+                                    <path
+                                        d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                                    <circle cx="12" cy="13" r="4" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="prof-name">Alex Johnson</div>
+                            <div class="prof-sub">Manage your profile details</div>
+                        </div>
+                    </div>
+                    <button class="mcp-btn" id="editProfileBtn" onclick="toggleEditMode()">Edit Profile</button>
+                </div>
+
+                <!-- ── Tabs ── -->
+                <div class="prof-tabs">
+                    <button class="prof-tab active" onclick="switchTab('personal', this)">Personal Details</button>
+                    <button class="prof-tab" onclick="switchTab('contact', this)">Contact Details</button>
+                    <button class="prof-tab" onclick="switchTab('child', this)">Child Details</button>
+                    <button class="prof-tab" onclick="switchTab('address', this)">My Address Book</button>
+                    <button class="prof-tab" onclick="switchTab('subscription', this)">Manage Subscription</button>
+                </div>
+
+                <!-- ── PANEL: Personal Details ── -->
+                <div class="prof-panel active" id="panel-personal">
+                    <div class="prof-section-title">Personal Details</div>
+                    <div class="prof-section-sub">Update your basic identity information here.</div>
+                    <div class="prof-form-grid">
+                        <div>
+                            <label class="form-label">Full Name</label>
+                            <input class="form-input edit-field" type="text" value="Alex Johnson"
+                                placeholder="Full Name" readonly>
+                        </div>
+                        <div>
+                            <label class="form-label">Email ID</label>
+                            <input class="form-input edit-field" type="email" value="alexjohnson@ledger.com"
+                                placeholder="Email" readonly>
+                        </div>
+                    </div>
+                    <div class="prof-action-row edit-actions" style="display:none;">
+                        <button class="mcp-btn" onclick="saveChanges()">Save Changes</button>
+                        <button class="mcp-btn mcp-btn-outline" onclick="toggleEditMode()">Discard</button>
+                    </div>
+
+                    <!-- Contact Details sub-section -->
+                    <div class="my-8">
+                        <div class="prof-section-title">Contact Details</div>
+                    </div>
+                    <div class="prof-contact-card">
+                        <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full">
+                            <div class="prof-contact-icon">
+                                <img src="images/WebsiteImages/category/iphone-white.png" alt="Phone" class="w-3">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="prof-contact-label">Phone Number</div>
+                                <div class="prof-contact-val" id="phoneDisplay1">
+                                    +1 (555) 012-3456
+                                    <span class="prof-verified-badge"><img
+                                        src="images/WebsiteImages/category/correct-sm.png" alt="Verified"
+                                        class="w-2 inline-block"> verified</span>
+                                </div>
+                            </div>
+                            <button class="mcp-btn w-full sm:w-auto" style="font-size:12px; padding:6px 14px;"
+                                onclick="toggleChangeNumber('changeNumberRow1', 'phoneDisplay1')">Change Number</button>
+                        </div>
+                        <div class="prof-change-number-row" id="changeNumberRow1">
+                            <div class="prof-change-number-input-row">
+                                <input class="form-input" type="tel" placeholder="Enter new phone number">
+                                <div>
+                                    <button class="mcp-btn" style="font-size:12px; padding:6px 14px;" onclick="saveNumber('changeNumberRow1','phoneDisplay1', this)">Update</button>
+                                    <button class="mcp-btn mcp-btn-outline" style="font-size:12px; padding:6px 14px;" onclick="toggleChangeNumber('changeNumberRow1','phoneDisplay1')">Cancel</button>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Child Details sub-section -->
+                    <div class="mt-6 mb-2">
+                        <div class="prof-section-title">Child Details</div>
+                    </div>
+                    <div class="cart-section-card child-details-card">
+                        <div class="flex items-start gap-2.5 sm:gap-6 md:gap-8">
+                            <!-- Upload photo -->
+                            <div class="flex flex-col items-center">
+                                <input type="file" id="childInput1" accept="image/*" style="display:none;"
+                                    onchange="uploadChildPhoto(this, 'childPreview1', 'childPlaceholder1')">
+                                <div class="prof-upload-box" onclick="document.getElementById('childInput1').click()">
+                                    <img id="childPreview1" src="" alt=""
+                                        style="display:none; width:100%; height:100%; object-fit:cover; border-radius:14px; position:absolute; inset:0;">
+                                    <span id="childPlaceholder1">
+                                        <img src="images/WebsiteImages/category/upload-user.png" alt="Child"
+                                            class="w-6">
+                                    </span>
+                                    <div class="prof-upload-badge">
+                                        <img src="images/WebsiteImages/category/upload-white.png" alt="Upload"
+                                            class="w-2">
+                                    </div>
+                                </div>
+                                <span class="prof-upload-label">Upload Photo</span>
+                            </div>
+
+                            <!-- Child form -->
+                            <div class="flex-1 min-w-0 w-full sm:w-auto">
+                                <div class="prof-child-grid">
+                                    <div>
+                                        <label class="form-label">Child Name</label>
+                                        <input class="form-input" type="text" placeholder="Enter name">
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Date of Birth</label>
+                                        <input class="form-input" type="text" placeholder="mm/dd/yy">
+                                    </div>
+                                </div>
+                                <label class="form-label mt-2">Gender</label>
+                                <div class="prof-gender-row">
+                                    <label class="prof-radio-label" onclick="selectGender(this)">
+                                        <div class="prof-radio selected"></div>
+                                        Boy
+                                    </label>
+                                    <label class="prof-radio-label" onclick="selectGender(this)">
+                                        <div class="prof-radio"></div>
+                                        Girl
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- My Address Book sub-section -->
+                    <div class="mt-4 mb-3 flex items-center justify-between">
+                        <div class="prof-section-title mb-0">My Address Book</div>
+                        <button class="mcp-btn" style="font-size:12px; padding:6px 16px;"
+                            onclick="toggleAddressForm('addrForm1')">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M6 1v10M1 6h10" stroke="white" stroke-width="1.8" stroke-linecap="round" />
+                            </svg>
+                            Add New Address
+                        </button>
+                    </div>
+
+                    <!-- Add address form (hidden by default) -->
+                    <div class="prof-addr-form" id="addrForm1">
+                        <div class="prof-addr-form-grid">
+                            <div>
+                                <label class="form-label">Address Label (e.g. Home, Office)</label>
+                                <input class="form-input" type="text" placeholder="e.g. Home">
+                            </div>
+                            <div>
+                                <label class="form-label">Full Name</label>
+                                <input class="form-input" type="text" placeholder="Recipient name">
+                            </div>
+                            <div>
+                                <label class="form-label">Address Line 1</label>
+                                <input class="form-input" type="text" placeholder="123 Main Street">
+                            </div>
+                            <div>
+                                <label class="form-label">Address Line 2</label>
+                                <input class="form-input" type="text" placeholder="123 Main Street">
+                            </div>
+                            <div>
+                                <label class="form-label">City</label>
+                                <input class="form-input" type="text" placeholder="City">
+                            </div>
+                            <div>
+                                <label class="form-label">Phone</label>
+                                <input class="form-input" type="tel" placeholder="+1 (555) 000-0000">
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="mcp-btn" style="font-size:12px;"
+                                onclick="toggleAddressForm('addrForm1')">Save Address</button>
+                            <button class="mcp-btn mcp-btn-outline" style="font-size:12px;"
+                                onclick="toggleAddressForm('addrForm1')">Cancel</button>
+                        </div>
+                    </div>
+
+                    <div class="prof-addr-card">
+                        <div class="prof-addr-icon"><img src="images/WebsiteImages/category/home-sm.png" alt="Home" class="w-4"></div>
+                        <div class="prof-addr-info">
+                            <div class="prof-addr-type">Home Address</div>
+                            <div class="prof-addr-line">
+                                Alex Johnson, 742 Evergreen Terrace, Springfield<br>
+                                Phone: +1 (555) 012-3456
+                            </div>
+                        </div>
+                        <div class="prof-addr-actions">
+                            <div class="prof-icon-btn"><i class="fa-solid fa-pen"></i></div>
+                            <div class="prof-icon-btn del"><i class="fa-solid fa-trash"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="prof-addr-card">
+                        <div class="prof-addr-icon"><img src="images/WebsiteImages/category/office-sm.png" alt="Office" class="w-4"></div>
+                        <div class="prof-addr-info">
+                            <div class="prof-addr-type">Office</div>
+                            <div class="prof-addr-line">
+                                Central Business District, Floor 22 Ledger Plaza<br>
+                                Phone: +1 (555) 987-6543
+                            </div>
+                        </div>
+                        <div class="prof-addr-actions">
+                            <div class="prof-icon-btn"><i class="fa-solid fa-pen"></i></div>
+                            <div class="prof-icon-btn del"><i class="fa-solid fa-trash"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Manage Subscription sub-section -->
+                    <div class="mt-6 mb-3">
+                        <div class="prof-section-title">Manage Subscription</div>
+                    </div>
+                    <div class="prof-sub-card">
+                        <div>
+                            <div class="prof-plan-label">Current Plan</div>
+                            <div class="prof-plan-name">Premium Ledger+</div>
+                            <div class="prof-sub-meta">
+                                <div>
+                                    <div class="prof-sub-label">Status</div>
+                                    <span class="order-status-delivered">Active</span>
+                                </div>
+                                <div>
+                                    <div class="prof-sub-label">Renewed Date</div>
+                                    <div class="prof-sub-val">Oct 24, 2024</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <button class="mcp-btn" style="font-size:12px; padding:7px 16px;">Manage Plan</button>
+                            <span class="prof-cancel-link">Cancel Subscription</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ── PANEL: Contact Details ── -->
+                <div class="prof-panel" id="panel-contact">
+                    <div class="prof-section-title">Contact Details</div>
+                    <div class="prof-section-sub">Manage your phone number and contact information.</div>
+                    <div class="prof-contact-card" style="flex-direction:column; align-items:stretch;">
+                        <div class="flex flex-wrap sm:flex-nowrap items-center gap-3">
+                            <div class="prof-contact-icon">
+                                <img src="images/WebsiteImages/category/iphone-white.png" alt="Phone" class="w-3">
+                            </div>
+                            <div class="flex-1">
+                                <div class="prof-contact-label">Phone Number</div>
+                                <div class="prof-contact-val" id="phoneDisplay2">
+                                    +1 (555) 012-3456
+                                    <span class="prof-verified-badge"><img
+                                        src="images/WebsiteImages/category/correct-sm.png" alt="Verified"
+                                        class="w-2 inline-block"> verified</span>
+                                </div>
+                            </div>
+                            <button class="mcp-btn py-2 px-6" onclick="toggleChangeNumber('changeNumberRow2','phoneDisplay2')">Change Number</button>
+                        </div>
+                        <div class="prof-change-number-row" id="changeNumberRow2">
+                            <div class="prof-change-number-input-row">
+                                <input class="form-input" type="tel" placeholder="Enter new phone number">
+                                <div>
+                                    <button class="mcp-btn" onclick="saveNumber('changeNumberRow2','phoneDisplay2', this)">Update</button>
+                                    <button class="mcp-btn mcp-btn-outline" onclick="toggleChangeNumber('changeNumberRow2','phoneDisplay2')">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── PANEL: Child Details ── -->
+                <div class="prof-panel" id="panel-child">
+                    <div class="prof-section-title">Child Details</div>
+                    <div class="prof-section-sub">Add or update your child's information.</div>
+                    <div class="cart-section-card">
+                        <div class="flex items-start gap-5">
+                            <div class="flex flex-col items-center">
+                                <input type="file" id="childInput2" accept="image/*" style="display:none;"
+                                    onchange="uploadChildPhoto(this, 'childPreview2', 'childPlaceholder2')">
+                                <div class="prof-upload-box" onclick="document.getElementById('childInput2').click()">
+                                    <img id="childPreview2" src="" alt=""
+                                        style="display:none; width:100%; height:100%; object-fit:cover; border-radius:14px; position:absolute; inset:0;">
+                                    <span id="childPlaceholder2">
+                                        <img src="images/WebsiteImages/category/upload-user.png" alt="Child"
+                                            class="w-6">
+                                    </span>
+                                    <div class="prof-upload-badge">
+                                        <img src="images/WebsiteImages/category/upload-white.png" alt="Upload"
+                                            class="w-2">
+                                    </div>
+                                </div>
+                                <span class="prof-upload-label">Upload Photo</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="prof-child-grid">
+                                    <div>
+                                        <label class="form-label">Child Name</label>
+                                        <input class="form-input" type="text" placeholder="Enter name">
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Date of Birth</label>
+                                        <input class="form-input" type="text" placeholder="mm/dd/yy">
+                                    </div>
+                                </div>
+                                <label class="form-label mt-2">Gender</label>
+                                <div class="prof-gender-row">
+                                    <label class="prof-radio-label" onclick="selectGender(this)">
+                                        <div class="prof-radio selected"></div> Boy
+                                    </label>
+                                    <label class="prof-radio-label" onclick="selectGender(this)">
+                                        <div class="prof-radio"></div> Girl
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="prof-action-row mt-2">
+                        <button class="mcp-btn">Save Changes</button>
+                        <button class="mcp-btn mcp-btn-outline">Discard</button>
+                    </div>
+                </div>
+
+                <!-- ── PANEL: My Address Book ── -->
+                <div class="prof-panel" id="panel-address">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="prof-section-title">My Address Book</div>
+                            <div class="prof-section-sub" style="margin-bottom:0;">Manage your saved delivery addresses.
+                            </div>
+                        </div>
+                        <button class="mcp-btn" style="font-size:12px; padding:6px 16px;"
+                            onclick="toggleAddressForm('addrForm2')">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M6 1v10M1 6h10" stroke="white" stroke-width="1.8" stroke-linecap="round" />
+                            </svg>
+                            Add New Address
+                        </button>
+                    </div>
+
+                    <!-- Add address form -->
+                    <div class="prof-addr-form" id="addrForm2">
+                        <div class="prof-addr-form-grid">
+                            <div>
+                                <label class="form-label">Address Label</label>
+                                <input class="form-input" type="text" placeholder="e.g. Home">
+                            </div>
+                            <div>
+                                <label class="form-label">Full Name</label>
+                                <input class="form-input" type="text" placeholder="Recipient name">
+                            </div>
+                            <div>
+                                <label class="form-label">Address Line 1</label>
+                                <input class="form-input" type="text" placeholder="123 Main Street">
+                            </div>
+                            <div>
+                                <label class="form-label">Address Line 2</label>
+                                <input class="form-input" type="text" placeholder="123 Main Street">
+                            </div>
+                            <div>
+                                <label class="form-label">City</label>
+                                <input class="form-input" type="text" placeholder="City">
+                            </div>
+                            <div>
+                                <label class="form-label">Phone</label>
+                                <input class="form-input" type="tel" placeholder="+1 (555) 000-0000">
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="mcp-btn" style="font-size:12px;"
+                                onclick="toggleAddressForm('addrForm2')">Save Address</button>
+                            <button class="mcp-btn mcp-btn-outline" style="font-size:12px;"
+                                onclick="toggleAddressForm('addrForm2')">Cancel</button>
+                        </div>
+                    </div>
+
+                    <div class="prof-addr-card">
+                        <div class="prof-addr-icon">
+                            <img src="images/WebsiteImages/category/home-sm.png" alt="Home" class="w-4">
+                        </div>
+                        <div class="prof-addr-info">
+                            <div class="prof-addr-type">Home Address</div>
+                            <div class="prof-addr-line">Alex Johnson, 742 Evergreen Terrace, Springfield<br>Phone: +1
+                                (555) 012-3456</div>
+                        </div>
+                        <div class="prof-addr-actions">
+                            <div class="prof-icon-btn"><i class="fa-solid fa-pen"></i></div>
+                            <div class="prof-icon-btn del"><i class="fa-solid fa-trash"></i></div>
+                        </div>
+                    </div>
+                    <div class="prof-addr-card">
+                        <div class="prof-addr-icon">
+                            <img src="images/WebsiteImages/category/office-sm.png" alt="Office" class="w-4">
+                        </div>
+                        <div class="prof-addr-info">
+                            <div class="prof-addr-type">Office</div>
+                            <div class="prof-addr-line">Central Business District, Floor 22 Ledger Plaza<br>Phone: +1
+                                (555) 987-6543</div>
+                        </div>
+                        <div class="prof-addr-actions">
+                            <div class="prof-icon-btn"><i class="fa-solid fa-pen"></i></div>
+                            <div class="prof-icon-btn del"><i class="fa-solid fa-trash"></i></div>
+                        </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <!-- ── PANEL: Manage Subscription ── -->
+                <div class="prof-panel" id="panel-subscription">
+                    <div class="prof-section-title">Manage Subscription</div>
+                    <div class="prof-section-sub">View and manage your current subscription plan.</div>
+                    <div class="prof-sub-card">
+                        <div>
+                            <div class="prof-plan-label">Current Plan</div>
+                            <div class="prof-plan-name">Premium Ledger+</div>
+                            <div class="prof-sub-meta">
+                                <div>
+                                    <div class="prof-sub-label">Status</div>
+                                    <span class="order-status-delivered">Active</span>
+                                </div>
+                                <div>
+                                    <div class="prof-sub-label">Renewed Date</div>
+                                    <div class="prof-sub-val">Oct 24, 2024</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <button class="mcp-btn" style="font-size:12px; padding:7px 16px;">Manage Plan</button>
+                            <span class="prof-cancel-link">Cancel Subscription</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            /* ── Avatar picker ── */
+            document.getElementById('avatarInput').addEventListener('change', function () {
+                const file = this.files[0];
+                if (!file || !file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = e => { document.getElementById('profileAvatarImg').src = e.target.result; };
+                reader.readAsDataURL(file);
+            });
+
+            /* ── Child photo upload ── */
+            function uploadChildPhoto(input, previewId, placeholderId) {
+                const file = input.files[0];
+                if (!file || !file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const preview = document.getElementById(previewId);
+                    const placeholder = document.getElementById(placeholderId);
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+                input.value = '';
+            }
+
+            /* ── Tab switching ── */
+            function switchTab(id, btn) {
+                document.querySelectorAll('.prof-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.prof-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('panel-' + id).classList.add('active');
+            }
+
+            /* ── Gender radio ── */
+            function selectGender(label) {
+                label.closest('.prof-gender-row').querySelectorAll('.prof-radio').forEach(r => r.classList.remove('selected'));
+                label.querySelector('.prof-radio').classList.add('selected');
+            }
+
+            /* ── Edit Profile toggle: enables/disables all .edit-field inputs ── */
+            let editMode = false;
+            function toggleEditMode() {
+                editMode = !editMode;
+                const btn = document.getElementById('editProfileBtn');
+                const fields = document.querySelectorAll('.edit-field');
+                const actions = document.querySelectorAll('.edit-actions');
+                if (editMode) {
+                    btn.textContent = 'Cancel';
+                    fields.forEach(f => f.removeAttribute('readonly'));
+                    actions.forEach(a => a.style.display = 'flex');
+                } else {
+                    btn.textContent = 'Edit Profile';
+                    fields.forEach(f => f.setAttribute('readonly', true));
+                    actions.forEach(a => a.style.display = 'none');
+                }
+            }
+
+            function saveChanges() {
+                editMode = false;
+                const btn = document.getElementById('editProfileBtn');
+                btn.textContent = 'Edit Profile';
+                document.querySelectorAll('.edit-field').forEach(f => f.setAttribute('readonly', true));
+                document.querySelectorAll('.edit-actions').forEach(a => a.style.display = 'none');
+                // Update name in header
+                const nameVal = document.querySelector('.edit-field[type="text"]').value;
+                if (nameVal) document.querySelector('.prof-name').textContent = nameVal;
+            }
+
+            /* ── Change Number inline toggle ── */
+            function toggleChangeNumber(rowId, displayId) {
+                const row = document.getElementById(rowId);
+                const isOpen = row.classList.contains('open');
+                row.classList.toggle('open');
+                // Clear input when closing
+                if (!isOpen) {
+                    row.querySelector('input').value = '';
+                    row.querySelector('input').focus();
+                }
+            }
+
+            function saveNumber(rowId, displayId, btn) {
+                const row = document.getElementById(rowId);
+                const input = row.querySelector('input');
+                const val = input.value.trim();
+                if (!val) { input.focus(); return; }
+                // Update display
+                const display = document.getElementById(displayId);
+                display.innerHTML = val + ' <span class="prof-verified-badge">● pending</span>';
+                row.classList.remove('open');
+            }
+
+            /* ── Add New Address form toggle ── */
+            function toggleAddressForm(formId) {
+                const form = document.getElementById(formId);
+                form.classList.toggle('open');
+                if (form.classList.contains('open')) {
+                    form.querySelector('input').focus();
+                }
+            }
+        </script>
+    </body>
+
+    </html>
