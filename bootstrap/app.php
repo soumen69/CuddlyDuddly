@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Console\Commands\AutoSettleOrders;
+use App\Console\Commands\ReleaseSellerSettlements;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )->withCommands([
         AutoSettleOrders::class,
+        ReleaseSellerSettlements::class
     ])
     ->withMiddleware(function (Middleware $middleware) {
         // Register aliases

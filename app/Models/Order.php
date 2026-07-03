@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Services\Order\OrderTimelineService;
 
 class Order extends Model
 {
@@ -70,6 +71,13 @@ class Order extends Model
             'id',
             'id'
         )->latest();
+    }
+
+    public function timeline()
+    {
+        return app(
+            OrderTimelineService::class
+        )->build($this);
     }
 
     // Order has many Products through OrderItems

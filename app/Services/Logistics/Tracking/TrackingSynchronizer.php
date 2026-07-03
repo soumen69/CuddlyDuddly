@@ -5,6 +5,7 @@ namespace App\Services\Logistics\Tracking;
 use App\Models\Shipment;
 use App\Services\Logistics\Contracts\CourierProvider;
 use App\Services\Order\OrderStatusEngine;
+use App\Models\OrderReturn;
 
 class TrackingSynchronizer
 {
@@ -14,23 +15,6 @@ class TrackingSynchronizer
         protected OrderStatusEngine $statusEngine,
     ) {}
 
-    /**
-     * Synchronize a single shipment with the configured courier.
-     *
-     * Flow
-     * ----
-     * Provider
-     *      ↓
-     * Raw Payload
-     *      ↓
-     * Save payload_last
-     *      ↓
-     * StatusMapper
-     *      ↓
-     * OrderStatusEngine
-     *      ↓
-     * OrderSummaryService
-     */
     public function synchronize(Shipment $shipment): Shipment
     {
         if (! $this->provider->supportsTracking()) {
@@ -73,5 +57,37 @@ class TrackingSynchronizer
         foreach ($shipments as $shipment) {
             $this->synchronize($shipment);
         }
+    }
+
+    public function scheduleReversePickup(
+        OrderReturn $return
+    ): void {
+
+        $response = $this->provider
+            ->scheduleReversePickup(
+                $return
+            );
+
+        $return->update([
+
+            'pickup_awb' =>
+            $response['awb_number'] ?? null,
+
+            'pickup_status' =>
+            $response['status'] ?? 'scheduled',
+
+            'pickup_scheduled_at' => now(),
+
+            'metadata' => array_merge(
+
+                $return->metadata ?? [],
+
+                [
+                    'reverse_pickup' => $response
+                ]
+
+            )
+
+        ]);
     }
 }

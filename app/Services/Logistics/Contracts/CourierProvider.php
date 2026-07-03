@@ -3,6 +3,7 @@
 namespace App\Services\Logistics\Contracts;
 
 use App\Models\Shipment;
+use App\Models\OrderReturn;
 
 interface CourierProvider
 {
@@ -76,4 +77,8 @@ interface CourierProvider
      * Returns true if shipment cancellation is supported.
      */
     public function supportsCancellation(): bool;
+
+    public function scheduleReversePickup(
+        OrderReturn $return
+    ): array;
 }

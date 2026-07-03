@@ -65,6 +65,12 @@ class OrderStatusEngine
                 $providerPayload
             );
 
+            $this->dispatchEvent(
+                $shipment,
+                $status,
+                $providerPayload
+            );
+
             $this->handleSettlement(
                 $shipment,
                 $status
@@ -88,13 +94,9 @@ class OrderStatusEngine
         });
     }
 
-    protected function updateShipmentItems(
-        Shipment $shipment,
-        string $status
-    ): void {
-        foreach (
-            $shipment->items as $item
-        ) {
+    protected function updateShipmentItems(Shipment $shipment, string $status): void
+    {
+        foreach ($shipment->items as $item) {
             $this->updateItem(
                 $item,
                 $status
@@ -406,5 +408,45 @@ class OrderStatusEngine
             $status,
             $payload
         );
+    }
+
+    protected function dispatchEvent(Shipment $shipment, string $status, array $payload = []): void
+    {
+        match ($status) {
+            'confirmed',
+            'pending'
+            => event(
+                new ShipmentCreated(
+                    $shipment,
+                    $payload
+                )
+            ),
+
+            'packed'
+            => event(
+                new ShipmentPacked(
+                    $shipment,
+                    $payload
+                )
+            ),
+
+            'shipped'
+            => event(
+                new ShipmentShipped(
+                    $shipment,
+                    $payload
+                )
+            ),
+
+            'delivered'
+            => event(
+                new ShipmentDelivered(
+                    $shipment,
+                    $payload
+                )
+            ),
+
+            default => null,
+        };
     }
 }

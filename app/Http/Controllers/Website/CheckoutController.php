@@ -11,9 +11,22 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ShippingAddress;
+use App\Services\Order\OrderPlacementService;
+use App\Services\Payment\PaymentGateway;
 
 class CheckoutController extends Controller
 {
+
+    protected OrderPlacementService $orderPlacementService;
+    protected PaymentGateway $paymentGateway;
+
+    public function __construct(
+        OrderPlacementService $orderPlacementService,
+        PaymentGateway $paymentGateway
+    ) {
+        $this->orderPlacementService = $orderPlacementService;
+        $this->paymentGateway = $paymentGateway;
+    }
 
     public function saveAddress(Request $request)
     {
@@ -161,7 +174,7 @@ class CheckoutController extends Controller
         ]);
 
         // 🧪 MOCK MODE (DEV SAFE)
-        if (app()->environment('local') || config('services.payment_mode') === 'mock') {
+        if (config('payment.provider') === 'mock') {
 
             return response()->json([
                 'success' => true,
@@ -169,42 +182,32 @@ class CheckoutController extends Controller
             ]);
         }
 
-        // 💳 REAL MODE (RAZORPAY)
-        try {
+        $order = new Order();
 
-            $api = new \Razorpay\Api\Api(
-                config('services.razorpay.key_id'),
-                config('services.razorpay.key_secret')
-            );
+        $order->order_number =
+            'TEMP-' . strtoupper(Str::random(12));
 
-            $razorpayOrder = $api->order->create([
-                'amount' => (int) round($total * 100), // 🔥 always integer
-                'currency' => 'INR',
-                'receipt' => 'order_' . uniqid(), // optional but good
-            ]);
-        } catch (\Exception $e) {
+        $order->total_amount = $total;
 
-            Log::error('Razorpay Initiate Failed', [
-                'error' => $e->getMessage(),
-                'user_id' => $userId
-            ]);
+        $response = $this->paymentGateway
+            ->createOrder($order);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment initialization failed. Please try again.'
-            ]);
-        }
+        session()->put(
 
-        // 🧠 STORE ORDER ID
-        session()->put('pending_order.razorpay_order_id', $razorpayOrder['id']);
+            'pending_order.razorpay_order_id',
 
-        // 📤 RESPONSE
+            $response['id']
+                ??
+                $response['order_id']
+
+        );
+
         return response()->json([
             'success' => true,
-            'mode' => 'razorpay',
-            'order_id' => $razorpayOrder['id'],
-            'amount' => (int) round($total * 100),
-            'key' => config('services.razorpay.key_id')
+            'mode' => $this->paymentGateway->provider(),
+            'order_id' => $response['id'] ?? $response['order_id'],
+            'amount' => intval(round($total * 100)),
+            'key' => config('services.razorpay.key_id'),
         ]);
     }
 
@@ -217,175 +220,50 @@ class CheckoutController extends Controller
         }
 
         // ✅ MOCK MODE
-        if (app()->environment('local') || config('services.payment_mode') === 'mock') {
-            return $this->createOrder($pending, $request);
+        if (config('payment.provider') === 'mock') {
+            $order = $this->orderPlacementService->place($pending, $request);
+
+            session()->forget('pending_order');
+
+            return response()->json([
+                'success' => true,
+                'order' => $this->formatOrder($order),
+            ]);
         }
 
-        // ✅ VALIDATE REQUEST
         $request->validate([
             'razorpay_payment_id' => 'required|string',
             'razorpay_order_id' => 'required|string',
             'razorpay_signature' => 'required|string',
         ]);
 
-        // ✅ MATCH ORDER ID
-        if ($pending['razorpay_order_id'] !== $request->razorpay_order_id) {
-            return response()->json(['success' => false, 'message' => 'Order mismatch']);
+        if ($pending['razorpay_order_id'] != $request->razorpay_order_id) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Order mismatch'
+            ]);
         }
 
-        $api = new \Razorpay\Api\Api(
-            config('services.razorpay.key_id'),
-            config('services.razorpay.key_secret')
+        $this->paymentGateway->verify(
+            $request->only([
+                'razorpay_order_id',
+                'razorpay_payment_id',
+                'razorpay_signature',
+            ])
         );
 
-        // ✅ VERIFY SIGNATURE
-        try {
-            $api->utility->verifyPaymentSignature([
-                'razorpay_order_id' => $request->razorpay_order_id,
-                'razorpay_payment_id' => $request->razorpay_payment_id,
-                'razorpay_signature' => $request->razorpay_signature,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment verification failed'
-            ]);
-        }
+        $tempOrder = new Order();
 
-        // ✅ VERIFY PAYMENT STATUS
-        try {
-            $payment = $api->payment->fetch($request->razorpay_payment_id);
+        $tempOrder->total_amount = $pending['amount'];
+        $this->paymentGateway->capture($tempOrder, $request->razorpay_payment_id);
+        $order = $this->orderPlacementService->place($pending, $request);
+        session()->forget('pending_order');
 
-            if ($payment->status !== 'captured') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Payment not captured'
-                ]);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Payment validation failed'
-            ]);
-        }
-
-        return $this->createOrder($pending, $request);
-    }
-
-    private function createOrder($pending, $request)
-    {
-        return DB::transaction(function () use ($pending, $request) {
-
-            // 🚫 DUPLICATE PROTECTION
-            if (!empty($request->razorpay_payment_id)) {
-                $existing = Order::where('razorpay_payment_id', $request->razorpay_payment_id)->first();
-
-                if ($existing) {
-                    $existing->load(['items.product.images', 'shippingAddress']);
-
-                    return response()->json([
-                        'success' => true,
-                        'order' => $this->formatOrder($existing)
-                    ]);
-                }
-            }
-
-            $userId = $pending['user_id'];
-
-            $cartItems = Cart::with(['product', 'variant'])
-                ->where('user_id', $userId)
-                ->where('is_ordered', false)
-                ->get();
-
-            // ✅ FIXED
-            if ($cartItems->isEmpty()) {
-                throw new \Exception('Cart empty');
-            }
-
-            // 🔐 CART SNAPSHOT VALIDATION
-            $cartSnapshot = [];
-
-            foreach ($cartItems as $item) {
-                $price = $item->variant?->price ?? $item->product->price;
-
-                $cartSnapshot[] = [
-                    'product_id' => $item->product_id,
-                    'variant_id' => $item->variant_id,
-                    'qty' => $item->quantity,
-                    'price' => $price
-                ];
-            }
-
-            if (md5(json_encode($cartSnapshot)) !== $pending['cart_hash']) {
-                throw new \Exception('Cart modified');
-            }
-
-            // 🔒 STOCK CHECK
-            foreach ($cartItems as $item) {
-                $stock = $item->variant?->stock ?? $item->product->stock;
-
-                if ($stock < $item->quantity) {
-                    throw new \Exception("Item out of stock");
-                }
-            }
-
-            // ✅ CREATE ORDER
-            $order = Order::create([
-                'user_id' => $userId,
-                'shipping_address_id' => $pending['address_id'],
-                'order_number' => 'ORD-' . strtoupper(Str::random(12)),
-                'total_amount' => $pending['amount'],
-                'payment_method' => 'online',
-                'payment_status' => 'paid',
-                'order_status' => 'placed',
-                'razorpay_order_id' => $pending['razorpay_order_id'] ?? null,
-                'razorpay_payment_id' => $request->razorpay_payment_id ?? null,
-            ]);
-
-            foreach ($cartItems as $item) {
-
-                // ✅ FIXED PRICE SOURCE
-                $price = $item->variant?->price ?? $item->product->price;
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'seller_id' => $sellerId,
-                    'shipment_id' => $shipment->id,
-                    'product_id' => $item->product_id,
-                    'product_variant_id' => $item->variant_id,
-                    'quantity' => $item->quantity,
-                    'price' => $price,
-                    'subtotal' => $price * $item->quantity,
-                    'item_status' => 'placed'
-                ]);
-
-                // 🔻 REDUCE STOCK
-                if ($item->variant) {
-                    $item->variant->decrement('stock', $item->quantity);
-                } else {
-                    $item->product->decrement('stock', $item->quantity);
-                }
-            }
-
-            // 🧹 CLEAR CART
-            Cart::where('user_id', $userId)
-                ->where('is_ordered', false)
-                ->delete();
-
-            session()->forget('pending_order');
-
-            $order->load([
-                'items.product.primaryImage',
-                'items.product.primaryVariantImage',
-                'items.variant.variantAttributeValues.attributeValue',
-                'shippingAddress'
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'order' => $this->formatOrder($order) ?? []
-            ]);
-        });
+        return response()->json([
+            'success' => true,
+            'order' => $this->formatOrder($order),
+        ]);
     }
 
     private function formatOrder($order)

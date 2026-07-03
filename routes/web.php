@@ -5,6 +5,7 @@ use App\Http\Controllers\Seller\SellerAdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\{
     AdminController,
+    AdminOrderLifecycleController,
     DashboardController,
     CategoryController,
     ProductCategoryController,
@@ -40,17 +41,20 @@ use App\Http\Controllers\Seller\{
     SellerSupportController,
     BulkUploadController,
     BulkImageController,
-    SellerBulkDashboardController
+    SellerBulkDashboardController,
+    SellerOrderLifecycleController
 };
 use App\Http\Controllers\Website\{
     PagesController,
     CustomerAuthController,
-    CheckoutController
+    CheckoutController,
+    OrderLifecycleController,
+    OrderTrackingController
 };
 
 use App\Models\Cart;
 use App\Http\Controllers\Webhooks\ShiprocketWebhookController;
-
+use App\Http\Controllers\Webhooks\RazorpayWebhookController;
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -89,6 +93,30 @@ Route::middleware('auth.customer')->group(function () {
     Route::post('/review/store', [ReviewController::class, 'CustomerReview'])->name('review.store');
     Route::get('/order-history', [CheckoutController::class, 'orderHistory'])->name('order-history');
     Route::post('/webhooks/shiprocket', ShiprocketWebhookController::class)->name('webhooks.shiprocket');
+    Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');
+
+    Route::prefix('orders')
+        ->group(function () {
+
+            Route::post(
+                '/items/{item}/cancel',
+                [OrderLifecycleController::class, 'cancelItem']
+            )->name('orders.items.cancel');
+
+            Route::post(
+                '/items/{item}/return',
+                [OrderLifecycleController::class, 'returnItem']
+            )->name('orders.items.return');
+
+            Route::post(
+                '/items/{item}/replace',
+                [OrderLifecycleController::class, 'replaceItem']
+            )->name('orders.items.replace');
+            Route::get(
+                '/{order}/tracking',
+                [OrderTrackingController::class, 'show']
+            );
+        });
 });
 
 Route::get('/', [PagesController::class, 'index'])->name('home');
@@ -213,9 +241,9 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
     Route::get('orders/get-addresses/{id}', [OrderController::class, 'getAddresses']);
     Route::get('orders/{id}/quick-view', [OrderController::class, 'quickView'])->name('quickView');
     Route::resource('returns', ReturnController::class)->names('admin.returns');
-    Route::resource('cancellations', CancellationController::class)->names('admin.cancellations');
-    Route::patch('cancellations/{id}/approve', [CancellationController::class, 'approve'])->name('admin.cancellations.approve');
-    Route::patch('cancellations/{id}/reject', [CancellationController::class, 'reject'])->name('admin.cancellations.reject');
+    // Route::resource('cancellations', CancellationController::class)->names('admin.cancellations');
+    // Route::patch('cancellations/{id}/approve', [CancellationController::class, 'approve'])->name('admin.cancellations.approve');
+    // Route::patch('cancellations/{id}/reject', [CancellationController::class, 'reject'])->name('admin.cancellations.reject');
 
     // Customers, Reviews, Wishlists
     Route::resource('customers', CustomerController::class)->names('admin.customers');
@@ -314,6 +342,54 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
     Route::post('trash/restore/{type}/{id}', [TrashController::class, 'restore'])->name('admin.trash.restore');
     Route::delete('trash/delete/{type}/{id}', [TrashController::class, 'delete'])->name('admin.trash.delete');
     Route::post('trash/bulk', [TrashController::class, 'bulkAction'])->name('admin.trash.bulk');
+
+    Route::prefix('orders')->group(function () {
+
+        Route::post(
+            '/cancellations/{cancellation}/approve',
+            [AdminOrderLifecycleController::class, 'approveCancellation']
+        );
+
+        Route::post(
+            '/cancellations/{cancellation}/reject',
+            [AdminOrderLifecycleController::class, 'rejectCancellation']
+        );
+
+        Route::post(
+            '/cancellations/{cancellation}/complete',
+            [AdminOrderLifecycleController::class, 'completeCancellation']
+        );
+
+        Route::post(
+            '/returns/{return}/approve',
+            [AdminOrderLifecycleController::class, 'approveReturn']
+        );
+
+        Route::post(
+            '/returns/{return}/reject',
+            [AdminOrderLifecycleController::class, 'rejectReturn']
+        );
+
+        Route::post(
+            '/replacements/{replacement}/approve',
+            [AdminOrderLifecycleController::class, 'approveReplacement']
+        );
+
+        Route::post(
+            '/replacements/{replacement}/reject',
+            [AdminOrderLifecycleController::class, 'rejectReplacement']
+        );
+
+        Route::post(
+            '/shipments/{shipment}/status',
+            [AdminOrderLifecycleController::class, 'forceShipmentStatus']
+        );
+
+        Route::post(
+            '/shipments/{shipment}/settlement',
+            [AdminOrderLifecycleController::class, 'releaseSettlement']
+        );
+    });
 });
 
 /*
@@ -478,6 +554,39 @@ Route::prefix('seller/{seller:slug}')->middleware('seller.auth')->group(function
                 '/{batchId}/skip',
                 [BulkImageController::class, 'skipForNow']
             )->name('skip');
+        });
+
+    Route::prefix('orders')
+        ->group(function () {
+            Route::post(
+                '/cancellations/{cancellation}/approve',
+                [SellerOrderLifecycleController::class, 'approveCancellation']
+            )->name('seller.orders.cancellations.approve');
+
+            Route::post(
+                '/cancellations/{cancellation}/reject',
+                [SellerOrderLifecycleController::class, 'rejectCancellation']
+            )->name('seller.orders.cancellations.reject');
+
+            Route::post(
+                '/returns/{return}/approve',
+                [SellerOrderLifecycleController::class, 'approveReturn']
+            )->name('seller.orders.returns.approve');
+
+            Route::post(
+                '/returns/{return}/reject',
+                [SellerOrderLifecycleController::class, 'rejectReturn']
+            )->name('seller.orders.returns.reject');
+
+            Route::post(
+                '/replacements/{replacement}/approve',
+                [SellerOrderLifecycleController::class, 'approveReplacement']
+            )->name('seller.orders.replacements.approve');
+
+            Route::post(
+                '/replacements/{replacement}/reject',
+                [SellerOrderLifecycleController::class, 'rejectReplacement']
+            )->name('seller.orders.replacements.reject');
         });
 });
 

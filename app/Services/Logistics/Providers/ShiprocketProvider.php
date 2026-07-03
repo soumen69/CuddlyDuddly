@@ -10,6 +10,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
+use App\Models\OrderReturn;
 
 class ShiprocketProvider implements CourierProvider
 {
@@ -50,25 +51,28 @@ class ShiprocketProvider implements CourierProvider
 
     protected function authenticate(): string
     {
-        $response = $this->http
-            ->post('/auth/login', [
+        if (!empty(config('services.shiprocket.token'))) {
+            return config('services.shiprocket.token');
+        }
+
+        $response = Http::acceptJson()->post(
+            config('services.shiprocket.base_url') . '/auth/login',
+            [
                 'email' => config('services.shiprocket.email'),
                 'password' => config('services.shiprocket.password'),
-            ])
-            ->throw();
-
-        $token = data_get(
-            $response->json(),
-            'token'
+            ]
         );
 
-        if (blank($token)) {
+        if ($response->failed()) {
             throw new RuntimeException(
-                'Shiprocket authentication failed.'
+                'Unable to authenticate with Shiprocket.'
             );
         }
 
-        return $token;
+        return data_get(
+            $response->json(),
+            'token'
+        );
     }
 
     protected function forgetToken(): void
@@ -419,5 +423,147 @@ class ShiprocketProvider implements CourierProvider
                 $exception
             );
         }
+    }
+
+
+    public function scheduleReversePickup(OrderReturn $return): array
+    {
+        $return->loadMissing([
+            'order.shippingAddress',
+            'item.product',
+        ]);
+
+        $address = $return->order->shippingAddress;
+
+        $token = $this->authenticate();
+
+        $payload = [
+
+            'order_id' => $return->return_number,
+
+            'order_date' => now()->toDateString(),
+
+            'channel_id' => '',
+
+            'pickup_customer_name' => $address->shipping_name,
+
+            'pickup_last_name' => '',
+
+            'pickup_address' => $address->address_line1,
+
+            'pickup_address_2' => $address->address_line2,
+
+            'pickup_city' => $address->city,
+
+            'pickup_state' => $address->state,
+
+            'pickup_country' => $address->country,
+
+            'pickup_pincode' => $address->postal_code,
+
+            'pickup_email' => $address->shipping_email,
+
+            'pickup_phone' => $address->shipping_phone,
+
+            'shipping_customer_name' => config('app.name'),
+
+            'shipping_address' => 'Seller Return Address',
+
+            'shipping_city' => '',
+
+            'shipping_state' => '',
+
+            'shipping_country' => 'India',
+
+            'shipping_pincode' => config('services.shiprocket.pickup_pincode'),
+
+            'shipping_email' => '',
+
+            'shipping_phone' => '',
+
+            'order_items' => [[
+
+                'name' => $return->item->product->name,
+
+                'sku' => $return->item->product_id,
+
+                'units' => $return->item->quantity,
+
+                'selling_price' => $return->item->price,
+
+            ]],
+
+            'payment_method' => 'Prepaid',
+
+            'sub_total' => $return->item->subtotal,
+
+            'length' => 10,
+
+            'breadth' => 10,
+
+            'height' => 10,
+
+            'weight' => 0.5,
+
+        ];
+
+        $response = Http::withToken($token)
+            ->acceptJson()
+            ->post(
+                config('services.shiprocket.base_url')
+                    . '/orders/create/return',
+                $payload
+            );
+
+        if ($response->failed()) {
+
+            throw new RuntimeException(
+                'Shiprocket reverse pickup failed.'
+            );
+        }
+
+        $data = $response->json();
+
+        return [
+
+            'success' => true,
+
+            'provider' => 'shiprocket',
+
+            'status' => 'scheduled',
+
+            'awb_number' =>
+            data_get(
+                $data,
+                'awb_code'
+            ),
+
+            'pickup_request_id' =>
+            data_get(
+                $data,
+                'pickup_token'
+            ),
+
+            'shipment_id' =>
+            data_get(
+                $data,
+                'shipment_id'
+            ),
+
+            'tracking_number' =>
+            data_get(
+                $data,
+                'tracking_number'
+            ),
+
+            'tracking_url' =>
+            data_get(
+                $data,
+                'tracking_url'
+            ),
+
+            'provider_payload' => $data,
+
+        ];
     }
 }

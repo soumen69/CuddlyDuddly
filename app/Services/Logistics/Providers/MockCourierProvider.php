@@ -5,6 +5,7 @@ namespace App\Services\Logistics\Providers;
 use App\Models\Shipment;
 use App\Services\Logistics\Contracts\CourierProvider;
 use Illuminate\Support\Str;
+use App\Models\OrderReturn;
 
 class MockCourierProvider implements CourierProvider
 {
@@ -92,6 +93,26 @@ class MockCourierProvider implements CourierProvider
             'pickup_reference' => 'PICKUP-' . strtoupper(Str::random(10)),
             'scheduled_at' => now()->toDateTimeString(),
             'raw' => [],
+        ];
+    }
+
+    public function scheduleReversePickup(
+        OrderReturn $return
+    ): array {
+
+        return [
+
+            'success' => true,
+
+            'status' => 'scheduled',
+
+            'awb_number' =>
+            'RAWB-' . strtoupper(
+                substr(md5(uniqid()), 0, 10)
+            ),
+
+            'provider' => 'mock',
+
         ];
     }
 

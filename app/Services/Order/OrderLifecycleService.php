@@ -9,12 +9,17 @@ use App\Models\OrderReplacement;
 use App\Models\OrderReturn;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
+use App\Services\Order\WorkflowNumberGenerator;
+use App\Services\Payment\RefundService;
+use App\Services\Logistics\Tracking\TrackingSynchronizer;
 
 class OrderLifecycleService
 {
     public function __construct(
         protected OrderStatusEngine $statusEngine,
         protected OrderSummaryService $summaryService,
+        protected WorkflowNumberGenerator $numberGenerator,
+        protected RefundService $refundService,
     ) {}
 
     /*
@@ -44,7 +49,7 @@ class OrderLifecycleService
 
             $request = OrderCancellation::create([
 
-                'cancel_number' => $this->nextNumber('CAN'),
+                'cancel_number' => $this->numberGenerator->generate('CAN'),
 
                 'order_id' => $item->order_id,
 
@@ -103,7 +108,7 @@ class OrderLifecycleService
 
             $return = OrderReturn::create([
 
-                'return_number' => $this->nextNumber('RET'),
+                'return_number' => $this->numberGenerator->generate('RET'),
 
                 'order_id' => $item->order_id,
 
@@ -160,7 +165,7 @@ class OrderLifecycleService
 
             $replacement = OrderReplacement::create([
 
-                'replacement_number' => $this->nextNumber('REP'),
+                'replacement_number' => $this->numberGenerator->generate('REP'),
 
                 'order_id' => $item->order_id,
 
@@ -299,7 +304,10 @@ class OrderLifecycleService
                 'completed_at' => now(),
                 'cancelled_at' => now(),
             ]);
-
+            $this->refundService
+                ->refundCancellation(
+                    $cancellation
+                );
             $this->refreshShipmentStatus(
                 $item->shipment
             );
@@ -324,18 +332,42 @@ class OrderLifecycleService
         ?string $notes = null
     ): OrderReturn {
 
-        $return->update([
-            'status' => 'approved',
-            'reviewed_by' => $reviewedBy,
-            'reviewed_at' => now(),
-            'review_notes' => $notes,
-        ]);
+        return DB::transaction(function () use (
+            $return,
+            $reviewedBy,
+            $notes
+        ) {
 
-        $return->item->update([
-            'return_status' => 'approved',
-        ]);
+            $return->update([
 
-        return $return->fresh();
+                'status' => 'approved',
+
+                'reviewed_by' => $reviewedBy,
+
+                'reviewed_at' => now(),
+
+                'review_notes' => $notes,
+
+            ]);
+
+            $return->item->update([
+                'return_status' => 'approved',
+            ]);
+
+            /*
+        |--------------------------------------------------------------------------
+        | Reverse Pickup
+        |--------------------------------------------------------------------------
+        */
+
+            app(
+                TrackingSynchronizer::class
+            )->scheduleReversePickup(
+                $return
+            );
+
+            return $return->fresh();
+        });
     }
 
     public function rejectReturn(
@@ -356,6 +388,99 @@ class OrderLifecycleService
         ]);
 
         return $return->fresh();
+    }
+
+    public function pickupReturnedItem(
+        OrderReturn $return
+    ): OrderReturn {
+
+        $return->update([
+
+            'pickup_status' => 'picked_up',
+
+            'picked_up_at' => now(),
+
+        ]);
+
+        return $return->fresh();
+    }
+
+    public function receiveReturnedItem(
+        OrderReturn $return
+    ): OrderReturn {
+
+        $return->update([
+
+            'status' => 'received',
+
+            'received_at' => now(),
+
+        ]);
+
+        return $return->fresh();
+    }
+
+    public function inspectReturnedItem(
+        OrderReturn $return,
+        bool $approved,
+        ?string $notes = null
+    ): OrderReturn {
+
+        $return->update([
+
+            'inspection_status' =>
+            $approved
+                ? 'passed'
+                : 'failed',
+
+            'inspected_at' => now(),
+
+            'review_notes' => $notes,
+
+        ]);
+
+        return $return->fresh();
+    }
+
+    public function completeReturn(
+        OrderReturn $return
+    ): OrderReturn {
+
+        return DB::transaction(function () use (
+            $return
+        ) {
+
+            $this->refundService
+                ->refundReturn($return);
+
+            $return->update([
+
+                'status' => 'closed',
+
+                'closed_at' => now(),
+
+            ]);
+
+            $return->item->update([
+
+                'item_status' => 'returned',
+
+                'returned_at' => now(),
+
+                'return_status' => 'completed',
+
+            ]);
+
+            $this->refreshShipmentStatus(
+                $return->shipment
+            );
+
+            $this->summaryService->refresh(
+                $return->order
+            );
+
+            return $return->fresh();
+        });
     }
 
     /*
@@ -539,18 +664,6 @@ class OrderLifecycleService
         */
 
         return (float) $item->subtotal;
-    }
-
-    protected function nextNumber(
-        string $prefix
-    ): string {
-
-        return sprintf(
-            '%s-%s-%06d',
-            strtoupper($prefix),
-            now()->format('Ym'),
-            random_int(1, 999999)
-        );
     }
 
     public function refreshOrder(

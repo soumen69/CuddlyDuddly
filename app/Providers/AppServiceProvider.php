@@ -8,12 +8,73 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\MasterCategory;
 use App\Models\Cart;
+use App\Services\Payment\Contracts\RefundProvider;
+use App\Services\Payment\Providers\Mock\MockRefundProvider;
+use App\Services\Payment\Providers\Razorpay\RazorpayRefundProvider;
+use App\Services\Payment\Contracts\PaymentProvider;
+use App\Services\Payment\Providers\Mock\MockPaymentProvider;
+use App\Services\Payment\Providers\Razorpay\RazorpayPaymentProvider;
+use App\Services\Payment\Contracts\PayoutProvider;
+use App\Services\Payment\Providers\Mock\MockPayoutProvider;
+use App\Services\Payment\Providers\Razorpay\RazorpayPayoutProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(
+            RefundProvider::class,
+            function () {
+
+                return match (config('payment.provider')) {
+
+                    'mock'
+                    => new MockRefundProvider(),
+
+                    'razorpay'
+                    => new RazorpayRefundProvider(),
+
+                    default
+                    => new MockRefundProvider(),
+                };
+            }
+        );
+
+        $this->app->bind(
+            PaymentProvider::class,
+            function () {
+
+                return match (config('payment.provider')) {
+
+                    'mock'
+                    => new MockPaymentProvider(),
+
+                    'razorpay'
+                    => new RazorpayPaymentProvider(),
+
+                    default
+                    => new MockPaymentProvider(),
+                };
+            }
+        );
+
+        $this->app->bind(
+            PayoutProvider::class,
+            function () {
+
+                return match (config('payment.provider')) {
+
+                    'mock'
+                    => new MockPayoutProvider(),
+
+                    'razorpay'
+                    => new RazorpayPayoutProvider(),
+
+                    default
+                    => new MockPayoutProvider(),
+                };
+            }
+        );
     }
 
     public function boot(): void
