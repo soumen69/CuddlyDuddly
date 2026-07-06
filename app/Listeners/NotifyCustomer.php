@@ -89,39 +89,26 @@ class NotifyCustomer implements ShouldQueue
                     'shipment_id' => $event->shipment->id,
                     'order_id' => $event->shipment->order_id,
                 ]
-
             )
-
         );
     }
 
-    protected function shipmentDelivered(
-        ShipmentDelivered $event
-    ): void {
+    protected function shipmentDelivered(ShipmentDelivered $event): void
+    {
         $this->notifications->send(
 
             new NotificationData(
-
                 title: 'Order Delivered',
-
                 message: 'Your order has been delivered.',
-
                 recipient: $event->shipment
                     ->order
                     ->user,
 
                 data: [
-
-                    'shipment_id'
-                    => $event->shipment->id,
-
-                    'order_id'
-                    => $event->shipment->order_id,
-
+                    'shipment_id' => $event->shipment->id,
+                    'order_id' => $event->shipment->order_id,
                 ]
-
             )
-
         );
     }
 }
