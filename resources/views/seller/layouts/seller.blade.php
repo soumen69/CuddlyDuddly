@@ -21,7 +21,6 @@
     <link rel="stylesheet" href="{{ asset('css/sellerportal.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    {{-- <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script> --}}
 
     <style>
         body {
@@ -97,19 +96,15 @@
 </head>
 
 <body>
-
     <div class="w-full">
         <div class="flex min-h-screen w-full">
             @include('seller.layouts.sidebar')
 
-
             @yield('content')
         </div>
-
     </div>
 
     <!-- @include('seller.layouts.footer') -->
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -123,8 +118,123 @@
     <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
     <script src="{{ asset('js/custom.js') }}"></script>
 
-    @stack('styles')
     @stack('scripts')
+
+    @if (filled(config('services.fcm.api_key')) &&
+            filled(config('services.fcm.project_id')) &&
+            filled(config('services.fcm.vapid_key')))
+        <script type="module">
+            import {
+                initializeApp
+            }
+            from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+
+            import {
+                getMessaging,
+                getToken,
+                onMessage
+            }
+            from "https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging.js";
+
+            const firebaseConfig = {
+
+                apiKey: "{{ config('services.fcm.api_key') }}",
+
+                authDomain: "{{ config('services.fcm.project_id') }}.firebaseapp.com",
+
+                projectId: "{{ config('services.fcm.project_id') }}",
+
+                storageBucket: "{{ config('services.fcm.project_id') }}.appspot.com",
+
+                messagingSenderId: "{{ config('services.fcm.sender_id') }}",
+
+                appId: "{{ config('services.fcm.app_id') }}"
+            };
+
+            const app = initializeApp(firebaseConfig);
+
+            const messaging = getMessaging(app);
+
+            async function initPush() {
+
+                try {
+
+                    const permission =
+                        await Notification.requestPermission();
+
+                    if (permission !== 'granted') {
+                        return;
+                    }
+
+                    const registration =
+                        await navigator.serviceWorker.register(
+                            '/firebase-messaging-sw.js'
+                        );
+
+                    const token = await getToken(messaging, {
+
+                        //vapidKey:
+                        //    "{{ config('services.fcm.vapid_key') }}",
+                        vapidKey: @json(config('services.fcm.vapid_key')),
+                        serviceWorkerRegistration: registration
+                    });
+
+                    if (!token) {
+                        return;
+                    }
+
+                    const response = await fetch(
+                        "{{ route('seller.notifications.push-token') }}", {
+                            method: 'POST',
+
+                            credentials: 'same-origin',
+
+                            headers: {
+                                'Content-Type': 'application/json',
+
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+
+                            body: JSON.stringify({
+                                fcm_token: token,
+                                platform: 'web'
+                            })
+                        }
+                    );
+                    await response.json();
+
+
+                } catch (error) {
+
+                    console.error('Push init error:', error);
+                }
+            }
+
+            initPush();
+
+            onMessage(messaging, (payload) => {
+
+                const title =
+                    payload.notification?.title ||
+                    payload.data?.title ||
+                    'Notification';
+
+                const body =
+                    payload.notification?.body ||
+                    payload.data?.message ||
+                    '';
+
+                if (Notification.permission === 'granted') {
+                    navigator.serviceWorker.getRegistration().then((reg) => {
+                        reg.showNotification(title, {
+                            body: body,
+                            icon: '/favicon.ico'
+                        });
+                    });
+                }
+            });
+        </script>
+    @endif
 
 </body>
 

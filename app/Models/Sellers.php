@@ -123,24 +123,6 @@ class Sellers extends Authenticatable
         );
     }
 
-    public function cancellations()
-    {
-        return $this->hasMany(
-            OrderCancellation::class
-        );
-    }
 
-    public function returns()
-    {
-        return $this->hasMany(
-            OrderReturn::class
-        );
-    }
 
-    public function replacements()
-    {
-        return $this->hasMany(
-            OrderReplacement::class
-        );
-    }
 }

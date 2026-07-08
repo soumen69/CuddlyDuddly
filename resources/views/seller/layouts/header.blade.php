@@ -21,6 +21,10 @@
     <link rel="stylesheet" href="{{ asset('css/sellerportal.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @if (filled(config('services.fcm.api_key')) && filled(config('services.fcm.project_id')))
+        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
+    @endif
 
     <style>
         /* ── Bell Button ── */
@@ -439,7 +443,6 @@
                 }
             </style>
 
-
             {{-- RIGHT SIDE ALERTS --}}
             <div class="w-full flex justify-end items-start">
 
@@ -478,8 +481,6 @@
                 @endif
 
             </div>
-
-
         </div>
 
         <div class="w-full flex flex-wrap gap-4">
@@ -495,21 +496,6 @@
                     <i class="fa-solid fa-bars"></i>
                 </button>
 
-
-                {{-- <button
-                    class="cursor-pointer w-9 h-9 md:w-12 md:h-12 ml-auto inline-block lg:mr-0 my-0 lg:m-auto group rounded-full border border-black/20 hover:bg-black transition-all duration-300">
-                    <svg width="33" height="33" viewBox="0 0 33 33" fill="none" xmlns="http://www.w3.org/2000/svg"
-                        class="w-full max-h-4 md:max-h-6 group-hover:text-white">
-                        <path
-                            d="M14.0681 28.7721C14.3086 29.1886 14.6545 29.5345 15.0711 29.775C15.4876 30.0154 15.9601 30.142 16.4411 30.142C16.9221 30.142 17.3946 30.0154 17.8112 29.775C18.2277 29.5345 18.5736 29.1886 18.8141 28.7721"
-                            stroke="currentColor" stroke-width="2.7402" stroke-linecap="round" stroke-linejoin="round">
-                        </path>
-                        <path
-                            d="M4.46917 20.9981C4.29019 21.1943 4.17207 21.4383 4.12919 21.7003C4.08631 21.9624 4.12051 22.2313 4.22763 22.4743C4.33476 22.7173 4.51018 22.9239 4.73258 23.069C4.95497 23.2141 5.21475 23.2915 5.4803 23.2917H27.4019C27.6674 23.2918 27.9272 23.2147 28.1498 23.0699C28.3723 22.925 28.5479 22.7186 28.6554 22.4758C28.7628 22.233 28.7973 21.9642 28.7548 21.7021C28.7122 21.44 28.5944 21.1959 28.4157 20.9995C26.5935 19.1211 24.6617 17.1249 24.6617 10.9608C24.6617 8.78056 23.7956 6.68962 22.2539 5.14796C20.7123 3.6063 18.6213 2.7402 16.4411 2.7402C14.2609 2.7402 12.1699 3.6063 10.6283 5.14796C9.08659 6.68962 8.2205 8.78056 8.2205 10.9608C8.2205 17.1249 6.28729 19.1211 4.46917 20.9981Z"
-                            stroke="currentColor" stroke-width="2.7402" stroke-linecap="round" stroke-linejoin="round">
-                        </path>
-                    </svg>
-                </button> --}}
 
                 <div class="notif-wrapper ml-auto">
                     <!-- Bell button -->
@@ -542,28 +528,50 @@
                                     $isUnread = !$notification->is_read;
                                     $type = strtolower($notification->type ?? 'update');
                                     $typeMeta = [
-                                        'order' => ['label' => 'Order', 'bg' => '#B5D4F4', 'color' => '#0C447C', 'emoji' => '📦'],
-                                        'product' => ['label' => 'Product', 'bg' => '#9FE1CB', 'color' => '#085041', 'emoji' => '🛍️'],
-                                        'alert' => ['label' => 'Alert', 'bg' => '#F5C4B3', 'color' => '#712B13', 'emoji' => '🚨'],
-                                        'review' => ['label' => 'Review', 'bg' => '#FAC775', 'color' => '#412402', 'emoji' => '⭐'],
-                                        'update' => ['label' => 'Update', 'bg' => '#C0DD97', 'color' => '#173404', 'emoji' => '🔔'],
+                                        'order' => [
+                                            'label' => 'Order',
+                                            'bg' => '#B5D4F4',
+                                            'color' => '#0C447C',
+                                            'emoji' => '📦',
+                                        ],
+                                        'product' => [
+                                            'label' => 'Product',
+                                            'bg' => '#9FE1CB',
+                                            'color' => '#085041',
+                                            'emoji' => '🛍️',
+                                        ],
+                                        'alert' => [
+                                            'label' => 'Alert',
+                                            'bg' => '#F5C4B3',
+                                            'color' => '#712B13',
+                                            'emoji' => '🚨',
+                                        ],
+                                        'review' => [
+                                            'label' => 'Review',
+                                            'bg' => '#FAC775',
+                                            'color' => '#412402',
+                                            'emoji' => '⭐',
+                                        ],
+                                        'update' => [
+                                            'label' => 'Update',
+                                            'bg' => '#C0DD97',
+                                            'color' => '#173404',
+                                            'emoji' => '🔔',
+                                        ],
                                     ];
                                     $meta = $typeMeta[$type] ?? $typeMeta['update'];
                                     $avatarText = strtoupper(substr($notification->title ?? 'N', 0, 2));
                                 @endphp
-                                <div class="notif-item {{ $isUnread ? 'unread' : '' }}" data-id="{{ $notification->id }}"
-                                    data-title="{{ e($notification->title ?? '') }}"
+                                <div class="notif-item {{ $isUnread ? 'unread' : '' }}"
+                                    data-id="{{ $notification->id }}" data-title="{{ e($notification->title ?? '') }}"
                                     data-desc="{{ e($notification->message ?? '') }}"
                                     data-details="{{ e($notification->details ?? '') }}"
                                     data-image="{{ e($notification->image ? asset('storage/' . ltrim($notification->image, '/')) : '') }}"
                                     data-url="{{ e(route('seller.notifications.show', $notification->id)) }}"
                                     data-time="{{ e(optional($notification->created_at)->diffForHumans() ?? '') }}"
-                                    data-tag-label="{{ e($meta['label']) }}"
-                                    data-tag-bg="{{ e($meta['bg']) }}"
-                                    data-tag-color="{{ e($meta['color']) }}"
-                                    data-banner-bg="{{ e($meta['bg']) }}"
-                                    data-banner-emoji="{{ e($meta['emoji']) }}"
-                                    data-avatar="{{ e($avatarText) }}"
+                                    data-tag-label="{{ e($meta['label']) }}" data-tag-bg="{{ e($meta['bg']) }}"
+                                    data-tag-color="{{ e($meta['color']) }}" data-banner-bg="{{ e($meta['bg']) }}"
+                                    data-banner-emoji="{{ e($meta['emoji']) }}" data-avatar="{{ e($avatarText) }}"
                                     data-avatar-bg="#185FA5"
                                     data-meta="{{ e(optional($notification->created_at)->format('M d, Y h:i A') ?? '') }}"
                                     data-primary="View notification">
@@ -571,7 +579,9 @@
                                     <div class="notif-body">
                                         <p class="notif-title">{{ $notification->title }}</p>
                                         <p class="notif-desc">{{ $notification->message }}</p>
-                                        <p class="notif-time">{{ $notification->created_at ? $notification->created_at->diffForHumans() : '' }}</p>
+                                        <p class="notif-time">
+                                            {{ $notification->created_at ? $notification->created_at->diffForHumans() : '' }}
+                                        </p>
                                     </div>
                                     @if ($isUnread)
                                         <span class="notif-dot"></span>
@@ -586,7 +596,10 @@
                         </div>
 
                         <div class="panel-footer">
-                            <button id="view-all">View all notifications</button>
+                            <button id="view-all" type="button"
+                                data-url="{{ route('seller.notifications', ['seller' => auth('seller')->user()->slug]) }}">
+                                View all notifications
+                            </button>
                         </div>
                     </div>
 
@@ -596,7 +609,8 @@
                         <div class="preview-banner" id="preview-banner"></div>
                         <div class="preview-body">
                             <span class="preview-tag" id="preview-tag"></span>
-                            <img id="preview-image" alt="" style="display:none;width:100%;max-height:140px;object-fit:cover;border-radius:12px;margin:0 0 12px;">
+                            <img id="preview-image" alt=""
+                                style="display:none;width:100%;max-height:140px;object-fit:cover;border-radius:12px;margin:0 0 12px;">
                             <p class="preview-title" id="preview-title"></p>
                             <div class="preview-meta">
                                 <div class="preview-avatar" id="preview-avatar"></div>
@@ -612,10 +626,18 @@
 
                 </div>
 
-
-                <div class="w-9 h-9 md:w-12 md:h-12 rounded-full border border-black/20 overflow-hidden">
-                    <img src="{{ asset('storage/images/profileimg.png') }}" alt="" class="scale-150">
-                </div>
+                @php
+                    $headerSeller = $seller ?? auth('seller')->user();
+                    $headerAvatar = $headerSeller?->avatar ?: $headerSeller?->logo;
+                    $headerAvatarUrl = $headerAvatar
+                        ? asset('storage/' . ltrim($headerAvatar, '/'))
+                        : asset('storage/images/profileimg.png');
+                @endphp
+                <a href="{{ route('seller.profile', ['seller' => $headerSeller->slug]) }}"
+                    class="block w-9 h-9 md:w-12 md:h-12 rounded-full border border-black/20 overflow-hidden">
+                    <img src="{{ $headerAvatarUrl }}" alt="Profile"
+                        class="w-full h-full object-cover">
+                </a>
                 <span class="">
                     <form id="logoutForm" method="POST" action="{{ route('seller.logout') }}" class="">
                         @csrf
@@ -624,7 +646,6 @@
                         border-[var(--color-pink-transparent)] bg-white text-[var(--color-pink-transparent)] hover:border-black 
                         focus:border-black hover:text-black focus:text-black flex items-center justify-center transition-all 
                         duration-300">
-                            <!-- <i class="fa-solid fa-arrow-right-from-bracket"></i> -->
                             <i class="fa-solid fa-power-off"></i>
                         </button>
                     </form>
@@ -819,6 +840,14 @@
             }).catch(() => {});
         });
 
+        const viewAllBtn = document.getElementById('view-all');
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener('click', () => {
+                const url = viewAllBtn.dataset.url;
+                if (url) window.location.href = url;
+            });
+        }
+
         previewClose.addEventListener('click', (e) => {
             e.stopPropagation();
             closePreview();
@@ -846,6 +875,64 @@
 
         updateBadge();
     </script>
+
+    @if (filled(config('services.fcm.api_key')) &&
+            filled(config('services.fcm.project_id')) &&
+            filled(config('services.fcm.vapid_key')))
+        <script>
+            (async function() {
+                if (!('serviceWorker' in navigator) || !('Notification' in window) || !('PushManager' in window)) {
+                    return;
+                }
+
+                if (Notification.permission === 'denied') {
+                    return;
+                }
+
+                const firebaseConfig = {
+                    apiKey: @json(config('services.fcm.api_key')),
+                    authDomain: @json(config('services.fcm.project_id') . '.firebaseapp.com'),
+                    projectId: @json(config('services.fcm.project_id')),
+                    storageBucket: @json(config('services.fcm.project_id') . '.appspot.com'),
+                    messagingSenderId: @json(config('services.fcm.sender_id')),
+                    appId: @json(config('services.fcm.app_id')),
+                };
+
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+
+                const messaging = firebase.messaging();
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    return;
+                }
+
+                const registration = await navigator.serviceWorker.register(@json(route('firebase-messaging-sw')));
+                const token = await messaging.getToken({
+                    vapidKey: @json(config('services.fcm.vapid_key')),
+                    serviceWorkerRegistration: registration,
+                });
+
+                if (!token) {
+                    return;
+                }
+
+                await fetch(@json(route('seller.notifications.push-token', ['seller' => auth('seller')->user()->slug])), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fcm_token: token,
+                        platform: 'web',
+                    }),
+                });
+            })().catch(() => {});
+        </script>
+    @endif
 
 </body>
 

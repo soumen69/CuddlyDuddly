@@ -95,28 +95,12 @@ Route::middleware('auth.customer')->group(function () {
     Route::post('/webhooks/shiprocket', ShiprocketWebhookController::class)->name('webhooks.shiprocket');
     Route::post('/webhooks/razorpay', RazorpayWebhookController::class)->name('webhooks.razorpay');
 
-    Route::prefix('orders')
-        ->group(function () {
-
-            Route::post(
-                '/items/{item}/cancel',
-                [OrderLifecycleController::class, 'cancelItem']
-            )->name('orders.items.cancel');
-
-            Route::post(
-                '/items/{item}/return',
-                [OrderLifecycleController::class, 'returnItem']
-            )->name('orders.items.return');
-
-            Route::post(
-                '/items/{item}/replace',
-                [OrderLifecycleController::class, 'replaceItem']
-            )->name('orders.items.replace');
-            Route::get(
-                '/{order}/tracking',
-                [OrderTrackingController::class, 'show']
-            );
-        });
+    Route::prefix('orders')->group(function () {
+        Route::post('/items/{item}/cancel', [OrderLifecycleController::class, 'cancelItem'])->name('orders.items.cancel');
+        Route::post('/items/{item}/return', [OrderLifecycleController::class, 'returnItem'])->name('orders.items.return');
+        Route::post('/items/{item}/replace', [OrderLifecycleController::class, 'replaceItem'])->name('orders.items.replace');
+        Route::get('/{order}/tracking', [OrderTrackingController::class, 'show']);
+    });
 });
 
 Route::get('/', [PagesController::class, 'index'])->name('home');
@@ -344,51 +328,15 @@ Route::prefix('admin')->middleware('admin.auth', 'verify.admin.session', 'admin.
     Route::post('trash/bulk', [TrashController::class, 'bulkAction'])->name('admin.trash.bulk');
 
     Route::prefix('orders')->group(function () {
-
-        Route::post(
-            '/cancellations/{cancellation}/approve',
-            [AdminOrderLifecycleController::class, 'approveCancellation']
-        );
-
-        Route::post(
-            '/cancellations/{cancellation}/reject',
-            [AdminOrderLifecycleController::class, 'rejectCancellation']
-        );
-
-        Route::post(
-            '/cancellations/{cancellation}/complete',
-            [AdminOrderLifecycleController::class, 'completeCancellation']
-        );
-
-        Route::post(
-            '/returns/{return}/approve',
-            [AdminOrderLifecycleController::class, 'approveReturn']
-        );
-
-        Route::post(
-            '/returns/{return}/reject',
-            [AdminOrderLifecycleController::class, 'rejectReturn']
-        );
-
-        Route::post(
-            '/replacements/{replacement}/approve',
-            [AdminOrderLifecycleController::class, 'approveReplacement']
-        );
-
-        Route::post(
-            '/replacements/{replacement}/reject',
-            [AdminOrderLifecycleController::class, 'rejectReplacement']
-        );
-
-        Route::post(
-            '/shipments/{shipment}/status',
-            [AdminOrderLifecycleController::class, 'forceShipmentStatus']
-        );
-
-        Route::post(
-            '/shipments/{shipment}/settlement',
-            [AdminOrderLifecycleController::class, 'releaseSettlement']
-        );
+        Route::post('/cancellations/{cancellation}/approve', [AdminOrderLifecycleController::class, 'approveCancellation']);
+        Route::post('/cancellations/{cancellation}/reject', [AdminOrderLifecycleController::class, 'rejectCancellation']);
+        Route::post('/cancellations/{cancellation}/complete', [AdminOrderLifecycleController::class, 'completeCancellation']);
+        Route::post('/returns/{return}/approve', [AdminOrderLifecycleController::class, 'approveReturn']);
+        Route::post('/returns/{return}/reject', [AdminOrderLifecycleController::class, 'rejectReturn']);
+        Route::post('/replacements/{replacement}/approve', [AdminOrderLifecycleController::class, 'approveReplacement']);
+        Route::post('/replacements/{replacement}/reject', [AdminOrderLifecycleController::class, 'rejectReplacement']);
+        Route::post('/shipments/{shipment}/status', [AdminOrderLifecycleController::class, 'forceShipmentStatus']);
+        Route::post('/shipments/{shipment}/settlement', [AdminOrderLifecycleController::class, 'releaseSettlement']);
     });
 });
 

@@ -15,7 +15,11 @@ class SellerBusinessDetail extends Model
         'gst_available',
         'gst_number',
         'pan_number',
-        'pan_name'
+        'pan_name',
+        'gst',
+        'pan',
+        'business_license',
+        'address_proof'
     ];
 
     public function seller()

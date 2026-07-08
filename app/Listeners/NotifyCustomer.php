@@ -22,19 +22,10 @@ class NotifyCustomer implements ShouldQueue
     public function handle(object $event): void
     {
         match (true) {
-
-            $event instanceof ShipmentCreated =>
-            $this->shipmentCreated($event),
-
-            $event instanceof ShipmentPacked =>
-            $this->shipmentPacked($event),
-
-            $event instanceof ShipmentShipped =>
-            $this->shipmentShipped($event),
-
-            $event instanceof ShipmentDelivered =>
-            $this->shipmentDelivered($event),
-
+            $event instanceof ShipmentCreated => $this->shipmentCreated($event),
+            $event instanceof ShipmentPacked => $this->shipmentPacked($event),
+            $event instanceof ShipmentShipped => $this->shipmentShipped($event),
+            $event instanceof ShipmentDelivered => $this->shipmentDelivered($event),
             default => null,
         };
     }
@@ -76,11 +67,9 @@ class NotifyCustomer implements ShouldQueue
         );
     }
 
-    protected function shipmentShipped(
-        ShipmentShipped $event
-    ): void {
+    protected function shipmentShipped(ShipmentShipped $event): void
+    {
         $this->notifications->send(
-
             new NotificationData(
                 title: 'Order Shipped',
                 message: 'Your order has been shipped.',

@@ -118,23 +118,23 @@
         [
             'label' => 'Payout',
             'icon' => 'payout',
-            'type' => 'url',
-            'url' => '#!',
-            'active_routes' => [],
+            'type' => 'route',
+            'route' => 'seller.payouts.index',
+            'active_routes' => ['seller.payouts.index'],
         ],
         [
             'label' => 'Support',
             'icon' => 'support',
-            'type' => 'url',
-            'url' => '#!',
-            'active_routes' => [],
+            'type' => 'route',
+            'route' => 'seller.support.index',
+            'active_routes' => ['seller.support.index'],
         ],
         [
             'label' => 'Settings',
             'icon' => 'settings',
-            'type' => 'url',
-            'url' => '#!',
-            'active_routes' => [],
+            'type' => 'route',
+            'route' => 'seller.setting',
+            'active_routes' => ['seller.setting'],
         ],
     ];
 @endphp
